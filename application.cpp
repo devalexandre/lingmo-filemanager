@@ -29,6 +29,7 @@
 #include <QQmlContext>
 
 #include <QDBusConnection>
+#include <QDBusConnectionInterface>
 #include <QPixmapCache>
 #include <QTranslator>
 #include <QFileInfo>
@@ -51,13 +52,15 @@ Application::Application(int& argc, char** argv)
     : QApplication(argc, argv)
     , m_instance(false)
 {
-    if (QDBusConnection::sessionBus().registerService("com.lingmo.FileManager")) {
+    QDBusConnection bus = QDBusConnection::sessionBus();
+    bool registered = bus.registerService("com.lingmo.FileManager");
+    if (registered) {
         setOrganizationName("lingmoos");
         setWindowIcon(QIcon::fromTheme("file-manager"));
 
         new FileManagerAdaptor(this);
         new DBusInterface;
-        QDBusConnection::sessionBus().registerObject("/FileManager", this);
+        bus.registerObject("/FileManager", this);
 
         // Translations
         QLocale locale;
@@ -72,6 +75,13 @@ Application::Application(int& argc, char** argv)
         }
 
         m_instance = true;
+    } else {
+        QDBusConnectionInterface *iface = bus.interface();
+        if (!bus.isConnected() || !iface || !iface->isServiceRegistered("com.lingmo.FileManager")) {
+            setOrganizationName("lingmoos");
+            setWindowIcon(QIcon::fromTheme("file-manager"));
+            m_instance = true;
+        }
     }
 }
 
