@@ -1,9 +1,12 @@
 [Desktop Entry]
 Type=Application
 Name=File Manager
+Name[pt_BR]=Gerenciador de arquivos
 Name[zh_CN]=文件管理器
 GenericName=File Manager
+GenericName[pt_BR]=Gerenciador de arquivos
 Comment=Lingmo File Manager
+Comment[pt_BR]=Gerenciador de arquivos do Lingmo
 Exec=lingmo-filemanager %u
 MimeType=inode/directory;
 Icon=file-system-manager
