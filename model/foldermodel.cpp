@@ -51,6 +51,7 @@
 #include <QClipboard>
 #include <QPainter>
 #include <QDrag>
+#include <QActionGroup>
 #include <QDir>
 #include <QProcess>
 #include <QSettings>
@@ -484,6 +485,25 @@ void FolderModel::setSortDirsFirst(bool enable)
         }
 
         emit sortDirsFirstChanged();
+    }
+}
+
+bool FolderModel::sortDesc() const
+{
+    return m_sortDesc;
+}
+
+void FolderModel::setSortDesc(bool desc)
+{
+    if (m_sortDesc != desc) {
+        m_sortDesc = desc;
+
+        if (m_sortMode != -1 /* Unsorted */) {
+            invalidateIfComplete();
+            sort(m_sortMode, m_sortDesc ? Qt::DescendingOrder : Qt::AscendingOrder);
+        }
+
+        emit sortDescChanged();
     }
 }
 
@@ -1253,6 +1273,50 @@ void FolderModel::setWallpaperSelected()
         iface.call("setWallpaper", url.toLocalFile());
 }
 
+// "Sort by" submenu, as in other file managers: the key, the direction and folders first
+QMenu *FolderModel::createSortMenu(QWidget *parent)
+{
+    QMenu *sortMenu = new QMenu(tr("Sort By"), parent);
+    sortMenu->setIcon(QIcon::fromTheme(QStringLiteral("view-sort")));
+
+    // Columns of KDirModel
+    const QList<QPair<QString, int>> keys = {
+        {tr("Name"), 0},
+        {tr("Size"), 1},
+        {tr("Type"), 6},
+        {tr("Date Modified"), 2},
+    };
+    QActionGroup *keyGroup = new QActionGroup(sortMenu);
+    for (const auto &key : keys) {
+        QAction *action = sortMenu->addAction(key.first);
+        action->setCheckable(true);
+        action->setChecked(m_sortMode == key.second);
+        keyGroup->addAction(action);
+        const int mode = key.second;
+        connect(action, &QAction::triggered, this, [this, mode] { setSortMode(mode); });
+    }
+
+    sortMenu->addSeparator();
+    QActionGroup *orderGroup = new QActionGroup(sortMenu);
+    QAction *ascending = sortMenu->addAction(tr("Ascending"));
+    QAction *descending = sortMenu->addAction(tr("Descending"));
+    for (QAction *action : {ascending, descending}) {
+        action->setCheckable(true);
+        orderGroup->addAction(action);
+    }
+    (m_sortDesc ? descending : ascending)->setChecked(true);
+    connect(ascending, &QAction::triggered, this, [this] { setSortDesc(false); });
+    connect(descending, &QAction::triggered, this, [this] { setSortDesc(true); });
+
+    sortMenu->addSeparator();
+    QAction *dirsFirst = sortMenu->addAction(tr("Folders First"));
+    dirsFirst->setCheckable(true);
+    dirsFirst->setChecked(m_sortDirsFirst);
+    connect(dirsFirst, &QAction::toggled, this, &FolderModel::setSortDirsFirst);
+
+    return sortMenu;
+}
+
 void FolderModel::openContextMenu(QQuickItem *visualParent, Qt::KeyboardModifiers modifiers)
 {
     Q_UNUSED(modifiers);
@@ -1289,6 +1353,7 @@ void FolderModel::openContextMenu(QQuickItem *visualParent, Qt::KeyboardModifier
         }
 
         menu->addSeparator();
+        menu->addMenu(createSortMenu(menu));
         menu->addAction(m_actionCollection.action("showHidden"));
 
         menu->addSeparator();

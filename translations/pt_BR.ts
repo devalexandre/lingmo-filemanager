@@ -550,4 +550,54 @@
         <translation>Gerenciador de arquivos</translation>
     </message>
 </context>
+<context>
+    <name>FolderModel</name>
+    <message>
+        <source>Sort By</source>
+        <translation>Ordenar por</translation>
+    </message>
+    <message>
+        <source>Name</source>
+        <translation>Nome</translation>
+    </message>
+    <message>
+        <source>Size</source>
+        <translation>Tamanho</translation>
+    </message>
+    <message>
+        <source>Type</source>
+        <translation>Tipo</translation>
+    </message>
+    <message>
+        <source>Date Modified</source>
+        <translation>Data de modificação</translation>
+    </message>
+    <message>
+        <source>Ascending</source>
+        <translation>Crescente</translation>
+    </message>
+    <message>
+        <source>Descending</source>
+        <translation>Decrescente</translation>
+    </message>
+    <message>
+        <source>Folders First</source>
+        <translation>Pastas primeiro</translation>
+    </message>
+</context>
+<context>
+    <name>OptionsMenu</name>
+    <message>
+        <source>Ascending</source>
+        <translation>Crescente</translation>
+    </message>
+    <message>
+        <source>Descending</source>
+        <translation>Decrescente</translation>
+    </message>
+    <message>
+        <source>Folders First</source>
+        <translation>Pastas primeiro</translation>
+    </message>
+</context>
 </TS>

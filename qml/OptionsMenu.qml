@@ -242,4 +242,86 @@ LingmoUI.DesktopMenu {
 
         onTriggered: settings.sortMode = 1
     }
+
+    MenuSeparator {}
+
+    MenuItem {
+        Layout.fillWidth: true
+
+        Text {
+            anchors.left: parent.left
+            anchors.verticalCenter: parent.verticalCenter
+            anchors.leftMargin: LingmoUI.Units.largeSpacing
+            text: qsTr("Ascending")
+            color: LingmoUI.Theme.textColor
+        }
+
+        Image {
+            anchors.verticalCenter: parent.verticalCenter
+            anchors.right: parent.right
+            anchors.rightMargin: LingmoUI.Units.largeSpacing * 1.5
+            source: LingmoUI.Theme.darkMode ? "qrc:/images/dark/checked.svg" : "qrc:/images/light/checked.svg"
+            sourceSize: Qt.size(width, height)
+            height: width
+            width: 22
+            visible: !settings.sortDesc
+            smooth: false
+        }
+
+        onTriggered: settings.sortDesc = false
+    }
+
+    MenuItem {
+        Layout.fillWidth: true
+
+        Text {
+            anchors.left: parent.left
+            anchors.verticalCenter: parent.verticalCenter
+            anchors.leftMargin: LingmoUI.Units.largeSpacing
+            text: qsTr("Descending")
+            color: LingmoUI.Theme.textColor
+        }
+
+        Image {
+            anchors.verticalCenter: parent.verticalCenter
+            anchors.right: parent.right
+            anchors.rightMargin: LingmoUI.Units.largeSpacing * 1.5
+            source: LingmoUI.Theme.darkMode ? "qrc:/images/dark/checked.svg" : "qrc:/images/light/checked.svg"
+            sourceSize: Qt.size(width, height)
+            height: width
+            width: 22
+            visible: settings.sortDesc
+            smooth: false
+        }
+
+        onTriggered: settings.sortDesc = true
+    }
+
+    MenuSeparator {}
+
+    MenuItem {
+        Layout.fillWidth: true
+
+        Text {
+            anchors.left: parent.left
+            anchors.verticalCenter: parent.verticalCenter
+            anchors.leftMargin: LingmoUI.Units.largeSpacing
+            text: qsTr("Folders First")
+            color: LingmoUI.Theme.textColor
+        }
+
+        Image {
+            anchors.verticalCenter: parent.verticalCenter
+            anchors.right: parent.right
+            anchors.rightMargin: LingmoUI.Units.largeSpacing * 1.5
+            source: LingmoUI.Theme.darkMode ? "qrc:/images/dark/checked.svg" : "qrc:/images/light/checked.svg"
+            sourceSize: Qt.size(width, height)
+            height: width
+            width: 22
+            visible: settings.sortDirsFirst
+            smooth: false
+        }
+
+        onTriggered: settings.sortDirsFirst = !settings.sortDirsFirst
+    }
 }

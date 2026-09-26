@@ -43,6 +43,8 @@
 #include <QRegExp>
 
 class QDrag;
+class QMenu;
+class QWidget;
 class CFileSizeJob;
 class FolderModel : public QSortFilterProxyModel, public QQmlParserStatus
 {
@@ -53,6 +55,7 @@ class FolderModel : public QSortFilterProxyModel, public QQmlParserStatus
     Q_PROPERTY(Status status READ status NOTIFY statusChanged)
     Q_PROPERTY(int sortMode READ sortMode WRITE setSortMode NOTIFY sortModeChanged)
     Q_PROPERTY(bool sortDirsFirst READ sortDirsFirst WRITE setSortDirsFirst NOTIFY sortDirsFirstChanged)
+    Q_PROPERTY(bool sortDesc READ sortDesc WRITE setSortDesc NOTIFY sortDescChanged)
     Q_PROPERTY(bool dragging READ dragging NOTIFY draggingChanged)
     Q_PROPERTY(QObject *viewAdapter READ viewAdapter WRITE setViewAdapter NOTIFY viewAdapterChanged)
     Q_PROPERTY(bool isDesktop READ isDesktop WRITE setIsDesktop NOTIFY isDesktopChanged)
@@ -137,6 +140,8 @@ public:
     void setSortMode(int mode);
 
     bool sortDirsFirst() const;
+    bool sortDesc() const;
+    void setSortDesc(bool desc);
     void setSortDirsFirst(bool enable);
 
     int filterMode() const;
@@ -281,6 +286,7 @@ protected:
     bool matchPattern(const KFileItem &item) const;
 
 private:
+    QMenu *createSortMenu(QWidget *parent);
     KDirModel *m_dirModel;
     KDirWatch *m_dirWatch;
     KDirLister *m_dirLister;
@@ -292,6 +298,7 @@ private:
     QList<QUrl> m_needSelectUrls;
 
     Status m_status;
+
     int m_sortMode;
     bool m_sortDesc;
     bool m_sortDirsFirst;

@@ -29,6 +29,8 @@ Settings {
     // Name, Date, Size
     property int orderBy: 0
     property int sortMode: 0
+    property bool sortDesc: false
+    property bool sortDirsFirst: true
 
     // UI
     property int width: 900

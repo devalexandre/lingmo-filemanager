@@ -156,6 +156,12 @@ Item {
         id: dirModel
         viewAdapter: viewAdapter
         sortMode: settings.sortMode
+        sortDesc: settings.sortDesc
+        sortDirsFirst: settings.sortDirsFirst
+        // The right-click "Sort By" menu changes the model: keep the choice
+        onSortModeChanged: settings.sortMode = sortMode
+        onSortDescChanged: settings.sortDesc = sortDesc
+        onSortDirsFirstChanged: settings.sortDirsFirst = sortDirsFirst
         // showHiddenFiles: settings.showHiddenFiles
 
         Component.onCompleted: {
