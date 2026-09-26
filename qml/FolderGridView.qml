@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import QtQuick 2.15
+import QtQuick
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 
@@ -26,6 +26,9 @@ import LingmoUI.CompatibleModule 3.0 as LingmoUI
 
 GridView {
     id: control
+    // Qt 6: a Flickable grabs left-button presses to flick the view, which kept
+    // the MouseArea below from selecting and dragging items. The wheel still scrolls.
+    acceptedButtons: Qt.NoButton
 
     objectName: "FolderGridView"
 
