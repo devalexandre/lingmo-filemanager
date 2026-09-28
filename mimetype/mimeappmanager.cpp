@@ -36,6 +36,8 @@
 #include <KConfig>
 #include <KConfigGroup>
 #include <KSharedConfig>
+#include <KApplicationTrader>
+#include <KService>
 
 static MimeAppManager *SELF = nullptr;
 
@@ -240,6 +242,22 @@ QString MimeAppManager::getDefaultAppByFilePath(const QString &filePath)
 }
 
 QString MimeAppManager::getDefaultAppByMimeType(const QMimeType &mimeType)
+{
+    // The user's own choice first; otherwise what the system says for this desktop
+    // (mimeapps.list files of the system and the desktop, e.g. lingmo-mimeapps.list,
+    // then the preference of the installed apps)
+    const QString userChoice = getUserDefaultAppByMimeType(mimeType);
+    if (!userChoice.isEmpty())
+        return userChoice;
+
+    const KService::Ptr service = KApplicationTrader::preferredService(mimeType.name());
+    if (service && QFile::exists(service->entryPath()))
+        return service->entryPath();
+
+    return QString();
+}
+
+QString MimeAppManager::getUserDefaultAppByMimeType(const QMimeType &mimeType)
 {
     QString mimeappsFile = mimeAppsListFilePath();
 

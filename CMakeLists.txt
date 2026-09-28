@@ -18,6 +18,7 @@ find_package(KF6KIO REQUIRED)
 find_package(KF6Solid REQUIRED)
 find_package(KF6WindowSystem REQUIRED)
 find_package(KF6Config REQUIRED)
+find_package(KF6Service REQUIRED)
 find_package(KF6XmlGui REQUIRED)
 
 find_package(LingmoUI3 REQUIRED)
@@ -85,6 +86,7 @@ target_link_libraries(lingmo-filemanager
   Qt6::Core5Compat
 
   KF6::KIOCore
+  KF6::Service
   KF6::KIOFileWidgets
   KF6::KIOWidgets
   KF6::Solid

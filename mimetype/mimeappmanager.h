@@ -43,6 +43,8 @@ public:
 
     QString getDefaultAppByFilePath(const QString &filePath);
     QString getDefaultAppByMimeType(const QMimeType &mimeType);
+    // Only what the user picked in ~/.config/mimeapps.list
+    QString getUserDefaultAppByMimeType(const QMimeType &mimeType);
     QString getDefaultAppDesktopByMimeType(const QString &mimeType);
     Q_INVOKABLE bool setDefaultAppForType(const QString &mimeType, const QString &app);
     Q_INVOKABLE bool setDefaultAppForFile(const QString &filePath, const QString &desktop);
