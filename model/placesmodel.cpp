@@ -66,6 +66,16 @@ PlacesModel::PlacesModel(QObject *parent)
         m_items.append(item);
     }
 
+    // Where installed programs live (AppImages); dropping an installer here installs it
+    const QString appsPath = QDir::homePath() + QStringLiteral("/Applications");
+    QDir().mkpath(appsPath);
+    {
+        PlacesItem *item = new PlacesItem(tr("Applications"), QUrl::fromLocalFile(appsPath));
+        item->setIconName("folder-applications");
+        item->setIconPath("folder-apps.svg");
+        m_items.append(item);
+    }
+
     const QString musicPath = QStandardPaths::writableLocation(QStandardPaths::MusicLocation);
     if (QDir(musicPath).exists()) {
         PlacesItem *item = new PlacesItem(tr("Music"), QUrl::fromLocalFile(musicPath));

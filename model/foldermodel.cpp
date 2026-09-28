@@ -1244,12 +1244,31 @@ void FolderModel::drop(QQuickItem *target, QObject *dropEvent, int row)
         return;
     }
 
-    if (!isDropBetweenSharedViews(mimeData->urls(), dropTargetFolderUrl)) {
-        KIO::Job *job = KIO::move(mimeData->urls(), dropTargetUrl, KIO::HideProgressInfo);
+    // Like the Applications folder on macOS: an installer (AppImage, .deb, .rpm, .exe…)
+    // dropped on ~/Applications gets installed instead of just moved
+    QList<QUrl> urls = mimeData->urls();
+    if (dropTargetFolderUrl.isLocalFile()
+        && QDir(dropTargetFolderUrl.toLocalFile()) == QDir(QDir::homePath() + QStringLiteral("/Applications"))) {
+        static const QStringList installers = {"appimage", "deb", "rpm", "exe", "msi", "flatpakref"};
+        for (auto it = urls.begin(); it != urls.end();) {
+            const QFileInfo info(it->toLocalFile());
+            if (it->isLocalFile() && installers.contains(info.suffix().toLower())) {
+                QProcess::startDetached(QStringLiteral("lingmo-winrun"), {QStringLiteral("--install"), info.absoluteFilePath()});
+                it = urls.erase(it);
+            } else {
+                ++it;
+            }
+        }
+        if (urls.isEmpty())
+            return;
+    }
+
+    if (!isDropBetweenSharedViews(urls, dropTargetFolderUrl)) {
+        KIO::Job *job = KIO::move(urls, dropTargetUrl, KIO::HideProgressInfo);
         job->start();
 
         // Add select
-        for (QUrl url : mimeData->urls()) {
+        for (QUrl url : urls) {
             m_needSelectUrls.append(QUrl::fromLocalFile(QString("%1/%2").arg(rootItem().url().toLocalFile())
                                                                         .arg(url.fileName())));
         }

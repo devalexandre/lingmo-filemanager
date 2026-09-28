@@ -142,7 +142,7 @@
         <translation>O arquivo ou pasta %1 não existe.</translation>
     </message>
     <message>
-        <location line="+948"/>
+        <location line="+967"/>
         <source>Select All</source>
         <translation>Selecionar tudo</translation>
     </message>
@@ -172,14 +172,14 @@
         <translation>Colar</translation>
     </message>
     <message>
-        <location line="-935"/>
-        <location line="+938"/>
+        <location line="-954"/>
+        <location line="+957"/>
         <source>New Folder</source>
         <translation>Nova pasta</translation>
     </message>
     <message>
-        <location line="-917"/>
-        <location line="+921"/>
+        <location line="-936"/>
+        <location line="+940"/>
         <source>New Text</source>
         <translation>Novo texto</translation>
     </message>
@@ -481,6 +481,11 @@
         <location line="+8"/>
         <source>Downloads</source>
         <translation>Downloads</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Applications</source>
+        <translation>Aplicativos</translation>
     </message>
     <message>
         <location line="+8"/>

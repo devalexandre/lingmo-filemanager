@@ -39,6 +39,7 @@
         <file>images/light/folder-desktop.svg</file>
         <file>images/light/folder-document.svg</file>
         <file>images/light/folder-download.svg</file>
+        <file>images/light/folder-apps.svg</file>
         <file>images/light/folder-home.svg</file>
         <file>images/light/folder-music.svg</file>
         <file>images/light/folder-picture.svg</file>
@@ -50,6 +51,7 @@
         <file>images/dark/folder-desktop.svg</file>
         <file>images/dark/folder-document.svg</file>
         <file>images/dark/folder-download.svg</file>
+        <file>images/dark/folder-apps.svg</file>
         <file>images/dark/folder-home.svg</file>
         <file>images/dark/folder-music.svg</file>
         <file>images/dark/folder-picture.svg</file>
@@ -63,6 +65,7 @@
         <file>images/folder-document.svg</file>
         <file>images/folder-desktop.svg</file>
         <file>images/folder-download.svg</file>
+        <file>images/folder-apps.svg</file>
         <file>images/folder-home.svg</file>
         <file>images/folder-music.svg</file>
         <file>images/folder-picture.svg</file>
