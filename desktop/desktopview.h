@@ -36,10 +36,12 @@ public:
 
 signals:
     void screenRectChanged();
+    void wallpaperRefreshRequested();
 
 private slots:
     void onPrimaryScreenChanged(QScreen *screen);
     void onGeometryChanged();
+    void onSessionInactive(bool active);
 
 private:
     QScreen *m_screen;

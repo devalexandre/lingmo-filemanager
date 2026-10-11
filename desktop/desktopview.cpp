@@ -25,6 +25,7 @@
 #include <QQmlContext>
 
 #include <QDebug>
+#include <QDBusConnection>
 #include <QGuiApplication>
 #include <QScreen>
 
@@ -58,6 +59,16 @@ DesktopView::DesktopView(QScreen *screen, QQuickView *parent)
 
     connect(m_screen, &QScreen::virtualGeometryChanged, this, &DesktopView::onGeometryChanged);
     connect(m_screen, &QScreen::geometryChanged, this, &DesktopView::onGeometryChanged);
+
+    // Recreate only the wallpaper when returning from a lock/suspend or when
+    // Qt recreates GPU resources. Deliver render-thread signals on the GUI thread.
+    connect(this, &QQuickWindow::sceneGraphInitialized,
+            this, &DesktopView::wallpaperRefreshRequested, Qt::QueuedConnection);
+    QDBusConnection::sessionBus().connect("org.freedesktop.ScreenSaver", "/ScreenSaver",
+        "org.freedesktop.ScreenSaver", "ActiveChanged", this, SLOT(onSessionInactive(bool)));
+    QDBusConnection::systemBus().connect("org.freedesktop.login1", "/org/freedesktop/login1",
+        "org.freedesktop.login1.Manager", "PrepareForSleep", this, SLOT(onSessionInactive(bool)));
+
 }
 
 QRect DesktopView::screenRect()
@@ -80,4 +91,12 @@ void DesktopView::onGeometryChanged()
     m_screenRect = m_screen->geometry().adjusted(0, 0, 1, 1);
     setGeometry(m_screenRect);
     emit screenRectChanged();
+}
+
+void DesktopView::onSessionInactive(bool active)
+{
+    if (!active) {
+        emit wallpaperRefreshRequested();
+        update();
+    }
 }

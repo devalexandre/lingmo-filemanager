@@ -32,6 +32,8 @@
 #include "../dialogs/openwithdialog.h"
 
 #include "../helper/datehelper.h"
+#include "../helper/archivemanager.h"
+#include <QMessageBox>
 #include "../helper/filelauncher.h"
 #include "../helper/fm.h"
 
@@ -1053,11 +1055,23 @@ void FolderModel::openSelected()
             continue;
         }
 
+        // AppImages from the internet go to their default app (Lingmo's
+        // lingmo-winrun runs them in an isolated box); only without one are
+        // they made executable and run directly
+        const bool appImage = mimeType == "application/x-iso9660-appimage"
+                           || mimeType == "application/vnd.appimage";
+        if (appImage) {
+            const QString handler = m_mimeAppManager->getDefaultAppByMimeType(item.currentMimeType());
+            if (!handler.isEmpty()) {
+                FileLauncher::self()->launchApp(handler, url.toLocalFile());
+                continue;
+            }
+        }
+
         // runnable
         if (mimeType == "application/x-executable" ||
             mimeType == "application/x-sharedlib" ||
-            mimeType == "application/x-iso9660-appimage" ||
-            mimeType == "application/vnd.appimage") {
+            appImage) {
             QFileInfo fileInfo(url.toLocalFile());
             if (!fileInfo.isExecutable()) {
                 QFile file(url.toLocalFile());
@@ -1388,6 +1402,10 @@ void FolderModel::openContextMenu(QQuickItem *visualParent, Qt::KeyboardModifier
         menu->addAction(m_actionCollection.action("openInNewWindow"));
 
         menu->addAction(m_actionCollection.action("openWith"));
+        menu->addSeparator();
+        menu->addAction(m_actionCollection.action("extractHere"));
+        menu->addAction(m_actionCollection.action("extractTo"));
+        menu->addAction(m_actionCollection.action("compress"));
         menu->addSeparator();
         menu->addAction(m_actionCollection.action("cut"));
         menu->addAction(m_actionCollection.action("copy"));
@@ -1899,6 +1917,24 @@ void FolderModel::createActions()
     QAction *openInNewWindow = new QAction(tr("Open in new window"), this);
     QObject::connect(openInNewWindow, &QAction::triggered, this, [=] { this->openInNewWindow(); });
 
+    const QList<QPair<QString, QString>> archiveActions = {
+        {"extractHere", tr("Extract Here")},
+        {"extractTo", tr("Extract To…")},
+        {"compress", tr("Compress…")}
+    };
+    for (int i = 0; i < archiveActions.size(); ++i) {
+        auto *action = new QAction(archiveActions[i].second, this);
+        action->setIcon(QIcon::fromTheme(i == 2 ? "archive-insert" : "archive-extract"));
+        m_actionCollection.addAction(archiveActions[i].first, action);
+        connect(action, &QAction::triggered, this, [this, i] {
+            if (!ArchiveManager::instance()->launch(static_cast<ArchiveManager::Operation>(i), selectedUrls()))
+                QMessageBox::warning(nullptr, tr("Archives"),
+                                     tr("Could not start Ark. Install Ark to extract and compress files."));
+        });
+    }
+    connect(ArchiveManager::instance(), &ArchiveManager::supportedFormatsChanged,
+            this, &FolderModel::updateActions);
+
     m_actionCollection.addAction(QStringLiteral("open"), open);
     m_actionCollection.addAction(QStringLiteral("openWith"), openWith);
     m_actionCollection.addAction(QStringLiteral("cut"), cut);
@@ -1947,6 +1983,16 @@ void FolderModel::updateActions()
                 hasDir = true;
         }
     }
+
+    const bool localSelection = !urls.isEmpty() && !hasRemoteFiles && !isTrash;
+    auto *archives = ArchiveManager::instance();
+    const bool extractable = localSelection && archives->canExtract(urls);
+    for (const auto &name : {"extractHere", "extractTo"}) {
+        if (auto *action = m_actionCollection.action(name))
+            action->setVisible(extractable);
+    }
+    if (auto *action = m_actionCollection.action("compress"))
+        action->setVisible(localSelection);
 
     KFileItemListProperties itemProperties(items);
     // Check if we're showing the menu for the trash link

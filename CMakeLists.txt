@@ -58,6 +58,7 @@ add_executable(lingmo-filemanager
   desktop/desktopsettings.cpp
   desktop/dockdbusinterface.cpp
 
+  helper/archivemanager.cpp
   helper/datehelper.cpp
   helper/pathhistory.cpp
   helper/fm.cpp

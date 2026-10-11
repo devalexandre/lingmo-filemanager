@@ -2,7 +2,6 @@ import QtQuick 2.12
 import QtQuick.Controls 2.12
 import QtQuick.Layouts 1.12
 import QtQuick.Window 2.12
-import Qt5Compat.GraphicalEffects
 
 import Lingmo.FileManager 1.0 as FM
 import LingmoUI.CompatibleModule 3.0 as LingmoUI
@@ -19,6 +18,14 @@ Item {
         anchors.fill: parent
         anchors.margins: 0
         sourceComponent: settings.backgroundType === 0 ? wallpaper : background
+    }
+
+    Connections {
+        target: desktopView
+        function onWallpaperRefreshRequested() {
+            backgroundLoader.active = false
+            Qt.callLater(function() { backgroundLoader.active = true })
+        }
     }
 
     Component {
@@ -44,12 +51,14 @@ Item {
             cache: false
 
             // Clear cache
-            onSourceChanged: dirModel.clearPixmapCache()
+            onSourceChanged: {
+                if (typeof dirModel !== "undefined")
+                    dirModel.clearPixmapCache()
+            }
 
-            ColorOverlay {
+            Rectangle {
                 id: dimsWallpaper
                 anchors.fill: parent
-                source: parent
                 color: "#000000"
                 opacity: LingmoUI.Theme.darkMode && settings.dimsWallpaper ? 0.4 : 0.0
 

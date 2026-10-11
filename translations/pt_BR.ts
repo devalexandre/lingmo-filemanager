@@ -284,6 +284,11 @@
         <source>Folders First</source>
         <translation>Pastas primeiro</translation>
     </message>
+    <message><source>Extract Here</source><translation>Extrair aqui</translation></message>
+    <message><source>Extract To…</source><translation>Extrair para…</translation></message>
+    <message><source>Compress…</source><translation>Compactar…</translation></message>
+    <message><source>Archives</source><translation>Arquivos compactados</translation></message>
+    <message><source>Could not start Ark. Install Ark to extract and compress files.</source><translation>Não foi possível iniciar o Ark. Instale o Ark para extrair e compactar arquivos.</translation></message>
 </context>
 <context>
     <name>FolderPage</name>
