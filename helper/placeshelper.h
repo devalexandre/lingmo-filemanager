@@ -31,6 +31,8 @@ class PlacesHelper : public QObject
     Q_PROPERTY(QString homePath READ homePath CONSTANT)
     Q_PROPERTY(QString boxesPath READ boxesPath CONSTANT)
     Q_PROPERTY(bool boxesExists READ boxesExists NOTIFY revisionChanged)
+    // image://pdfpreview is available (built with poppler-qt6)
+    Q_PROPERTY(bool pdfPreviewAvailable READ pdfPreviewAvailable CONSTANT)
     // Bumped every 30 s and when files change: bindings that read disk
     // usage depend on it to stay current
     Q_PROPERTY(int revision READ revision NOTIFY revisionChanged)
@@ -46,6 +48,7 @@ public:
     QString boxesPath() const;
     bool boxesExists() const;
     int revision() const;
+    bool pdfPreviewAvailable() const;
 
     Q_INVOKABLE bool isFavorite(const QString &pathOrUrl) const;
     Q_INVOKABLE void addFavorite(const QString &pathOrUrl);

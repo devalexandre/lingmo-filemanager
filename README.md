@@ -68,9 +68,9 @@ This project has been licensed by GPLv3.
 - **Painel de visualização**: imagem, primeira página de PDF, início de arquivos
   de texto, dados de áudio/vídeo e detalhes (tamanho, datas, permissões).
 
-Opcionais: `kfilemetadata` (duração, dimensões, artista… no painel; detectado
-no `cmake`) e o módulo QML `QtQuick.Pdf` (`qt6-webengine` no Arch) para a página
-do PDF. Sem eles o painel mostra o ícone e os detalhes básicos.
+Opcionais, detectados no `cmake`: `kfilemetadata` (duração, dimensões,
+artista… no painel) e `poppler-qt6` (primeira página do PDF, renderizada fora da
+thread da interface). Sem eles o painel mostra o ícone e os detalhes básicos.
 
 ## Arquivos compactados
 

@@ -13,7 +13,6 @@
         <file>qml/Controls/SideBarItem.qml</file>
         <file>qml/Controls/SideBarSection.qml</file>
         <file>qml/PreviewPane.qml</file>
-        <file>qml/PdfPreview.qml</file>
         <file>qml/SearchResultsView.qml</file>
         <file>qml/TabStrip.qml</file>
         <file>images/dark/go-next.svg</file>

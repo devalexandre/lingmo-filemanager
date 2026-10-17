@@ -22,6 +22,9 @@
 #include "window.h"
 #include "desktop/desktop.h"
 #include "thumbnailer/thumbnailprovider.h"
+#ifdef HAVE_POPPLER
+#include "thumbnailer/pdfpreviewprovider.h"
+#endif
 #include "filemanageradaptor.h"
 
 #include <QCommandLineParser>
@@ -131,6 +134,9 @@ void Application::openWindow(const QString &path)
     Window *w = new Window;
     w->rootContext()->setContextProperty("arg", path);
     w->addImageProvider("thumbnailer", new ThumbnailProvider());
+#ifdef HAVE_POPPLER
+    w->addImageProvider("pdfpreview", new PdfPreviewProvider());
+#endif
     w->load(QUrl("qrc:/qml/main.qml"));
 }
 

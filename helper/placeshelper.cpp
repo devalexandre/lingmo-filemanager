@@ -285,6 +285,15 @@ int PlacesHelper::revision() const
     return m_revision;
 }
 
+bool PlacesHelper::pdfPreviewAvailable() const
+{
+#ifdef HAVE_POPPLER
+    return true;
+#else
+    return false;
+#endif
+}
+
 QString PlacesHelper::urlToPath(const QString &url) const
 {
     const QString path = localPathFor(url);

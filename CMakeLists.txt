@@ -26,6 +26,13 @@ find_package(LingmoUI3 REQUIRED)
 # Optional: duration, dimensions, artist... in the preview pane
 find_package(KF6FileMetaData QUIET)
 
+# Optional: first page of PDFs in the preview pane (poppler-qt6)
+find_package(ECM QUIET NO_MODULE)
+if(ECM_FOUND)
+  list(APPEND CMAKE_MODULE_PATH ${ECM_FIND_MODULE_DIR})
+endif()
+find_package(Poppler QUIET COMPONENTS Qt6)
+
 qt6_add_dbus_adaptor(DBUS_SOURCES
                      com.lingmo.FileManager.xml
                      application.h Application)
@@ -102,6 +109,15 @@ target_link_libraries(lingmo-filemanager
 
   LingmoUI3
 )
+
+if(Poppler_Qt6_FOUND)
+  target_sources(lingmo-filemanager PRIVATE thumbnailer/pdfpreviewprovider.cpp)
+  target_link_libraries(lingmo-filemanager PRIVATE Poppler::Qt6)
+  target_compile_definitions(lingmo-filemanager PRIVATE HAVE_POPPLER)
+  message(STATUS "PDF preview: poppler-qt6")
+else()
+  message(STATUS "PDF preview: disabled (poppler-qt6 not found)")
+endif()
 
 if(KF6FileMetaData_FOUND)
   target_link_libraries(lingmo-filemanager PRIVATE KF6::FileMetaData)

@@ -94,12 +94,29 @@ Item {
                     }
                 }
 
-                Loader {
-                    id: _pdfLoader
+                // First PDF page, rendered by Poppler off the GUI thread
+                Image {
+                    id: _pdfPage
                     anchors.fill: parent
-                    active: control.selectionCount <= 1 && control.info.isPdf === true
-                    source: "PdfPreview.qml"
-                    onLoaded: item.source = Qt.binding(function() { return control.info.url })
+                    visible: control.selectionCount <= 1 && control.info.isPdf === true && status === Image.Ready
+                    source: control.selectionCount <= 1 && control.info.isPdf && FM.Places.pdfPreviewAvailable
+                            ? "image://pdfpreview/" + control.info.url : ""
+                    sourceSize: Qt.size(width * 2, height * 2)
+                    fillMode: Image.PreserveAspectFit
+                    asynchronous: true
+                    cache: false
+                }
+
+                // Page outline so a white page stands out on a light background
+                Rectangle {
+                    visible: _pdfPage.visible
+                    anchors.centerIn: _pdfPage
+                    width: _pdfPage.paintedWidth
+                    height: _pdfPage.paintedHeight
+                    color: "transparent"
+                    border.width: 1
+                    border.color: Qt.rgba(LingmoUI.Theme.textColor.r, LingmoUI.Theme.textColor.g,
+                                          LingmoUI.Theme.textColor.b, 0.12)
                 }
 
                 Rectangle {
@@ -127,8 +144,7 @@ Item {
                     height: width
                     sourceSize: Qt.size(width, height)
                     source: "image://icontheme/" + (control.info.iconName || "text-x-generic")
-                    visible: control.selectionCount <= 1 && !_picture.visible
-                             && !(_pdfLoader.status === Loader.Ready && _pdfLoader.active)
+                    visible: control.selectionCount <= 1 && !_picture.visible && !_pdfPage.visible
                              && control.textHead.length === 0
                 }
             }
