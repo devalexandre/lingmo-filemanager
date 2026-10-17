@@ -82,7 +82,9 @@ public:
         IconNameRole,
         ThumbnailRole,
         ModifiedRole,
-        IsDesktopFileRole
+        IsDesktopFileRole,
+        KindRole,
+        PathRole
     };
 
     enum FilterMode {
@@ -201,6 +203,10 @@ public:
     Q_INVOKABLE void paste();
     Q_INVOKABLE void cut();
     Q_INVOKABLE void openSelected();
+    // Opens one file or folder the same way a double click does
+    Q_INVOKABLE void openPath(const QString &pathOrUrl);
+    // Preview pane: the first selected item, or the folder itself
+    Q_INVOKABLE QVariantMap selectedItemInfo() const;
     Q_INVOKABLE void showOpenWithDialog();
     Q_INVOKABLE void deleteSelected();
     Q_INVOKABLE void moveSelectedToTrash();
@@ -264,6 +270,9 @@ signals:
 
     void currentIndexChanged();
 
+    // The window opens this folder in a new tab
+    void openInNewTabRequested(const QString &url);
+
 private slots:
     void selectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
     void dragSelectedInternal(int x, int y);
@@ -279,6 +288,7 @@ private:
     void addDragImage(QDrag *drag, int x, int y);
 
     bool isSupportThumbnails(const QString &mimeType) const;
+    void openItemUrl(const QUrl &url);
 
 protected:
     bool filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const override;

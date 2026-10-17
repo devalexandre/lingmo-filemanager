@@ -40,12 +40,16 @@ Item {
     property bool selected: model.selected
     property bool blank: model.blank
     property var fileName: model.displayName
+    property bool isDir: model.isDir
+    property var url: model.url
+    readonly property bool isDesktop: GridView.view.isDesktopView
+    readonly property int iconSize: GridView.view.iconSize
 
     // For desktop
-    visible: GridView.view.isDesktopView ? !blank : true
+    visible: isDesktop ? !blank : true
 
     onSelectedChanged: {
-        if (!GridView.view.isDesktopView)
+        if (!isDesktop)
             return
 
         if (selected && !blank) {
@@ -60,38 +64,47 @@ Item {
         }
     }
 
-    Rectangle {
+    // Hit area for hover/selection (FolderGridView maps the mouse into it)
+    Item {
         id: _background
         width: Math.max(_iconItem.width, _label.paintedWidth)
         height: _iconItem.height + _label.paintedHeight + LingmoUI.Units.largeSpacing
         x: (parent.width - width) / 2
         y: _iconItem.y
+    }
 
-        // (Deprecated) Rectangle rounded corner.
-        //color: selected || hovered ? LingmoUI.Theme.highlightColor : "transparent"
-        color: "transparent"
-        // radius: LingmoUI.Theme.mediumRadius
-        // visible: selected || hovered
-        // opacity: selected ? 1.0 : 0.2
+    // Window views: soft rounded tile behind the icon when hovered/selected
+    Rectangle {
+        visible: !control.isDesktop
+        anchors.centerIn: _iconItem
+        width: control.iconSize + LingmoUI.Units.largeSpacing
+        height: width
+        radius: LingmoUI.Theme.mediumRadius
+        color: control.selected ? Qt.rgba(LingmoUI.Theme.textColor.r, LingmoUI.Theme.textColor.g,
+                                          LingmoUI.Theme.textColor.b, LingmoUI.Theme.darkMode ? 0.14 : 0.09)
+             : control.hovered ? Qt.rgba(LingmoUI.Theme.textColor.r, LingmoUI.Theme.textColor.g,
+                                         LingmoUI.Theme.textColor.b, LingmoUI.Theme.darkMode ? 0.08 : 0.05)
+             : "transparent"
+
+        Behavior on color { ColorAnimation { duration: 120 } }
     }
 
     Item {
         id: _iconItem
         anchors.top: parent.top
         anchors.horizontalCenter: parent.horizontalCenter
-        anchors.topMargin: LingmoUI.Units.smallSpacing
-        anchors.bottomMargin: LingmoUI.Units.smallSpacing
+        anchors.topMargin: control.isDesktop ? LingmoUI.Units.smallSpacing : LingmoUI.Units.smallSpacing * 1.5
         z: 2
 
-        width: parent.width - LingmoUI.Units.largeSpacing * 2
-        height: control.GridView.view.iconSize
+        width: control.iconSize
+        height: control.iconSize
 
         opacity: model.isHidden ? 0.5 : 1.0
 
         Image {
             id: _icon
-            width: control.GridView.view.iconSize
-            height: control.GridView.view.iconSize
+            width: control.iconSize
+            height: control.iconSize
             anchors.centerIn: parent
             sourceSize: Qt.size(width, height)
             source: "image://icontheme/" + model.iconName
@@ -100,13 +113,13 @@ Item {
             antialiasing: true
         }
 
+        // Thumbnails: same square size for every picture, rounded corners
         Image {
             id: _image
-            anchors.fill: parent
-            anchors.topMargin: LingmoUI.Units.smallSpacing
-            anchors.leftMargin: LingmoUI.Units.smallSpacing
-            anchors.rightMargin: LingmoUI.Units.smallSpacing
-            fillMode: Image.PreserveAspectFit
+            anchors.centerIn: parent
+            width: control.isDesktop ? parent.width : Math.round(control.iconSize * 0.92)
+            height: width
+            fillMode: control.isDesktop ? Image.PreserveAspectFit : Image.PreserveAspectCrop
             visible: status === Image.Ready
             horizontalAlignment: Qt.AlignHCenter
             verticalAlignment: Qt.AlignVCenter
@@ -127,10 +140,21 @@ Item {
                         anchors.centerIn: parent
                         width: Math.min(parent.width, _image.paintedWidth)
                         height: Math.min(parent.height, _image.paintedHeight)
-                        radius: height * 0.1
+                        radius: control.isDesktop ? height * 0.1 : LingmoUI.Theme.smallRadius
                     }
                 }
             }
+        }
+
+        // Hairline frame so light pictures don't melt into the background
+        Rectangle {
+            visible: _image.visible && !control.isDesktop
+            anchors.fill: _image
+            radius: LingmoUI.Theme.smallRadius
+            color: "transparent"
+            border.width: 1
+            border.color: Qt.rgba(LingmoUI.Theme.textColor.r, LingmoUI.Theme.textColor.g,
+                                  LingmoUI.Theme.textColor.b, 0.12)
         }
 
         Image {
@@ -143,13 +167,14 @@ Item {
             sourceSize: Qt.size(width, height)
         }
 
+        // Desktop keeps its tinted-icon selection
         ColorOverlay {
             id: _selectedColorOverlay
             anchors.fill: _iconItem
             source: _iconItem
             color: LingmoUI.Theme.highlightColor
             opacity: 0.5
-            visible: control.selected
+            visible: control.isDesktop && control.selected
         }
 
         ColorOverlay {
@@ -158,7 +183,7 @@ Item {
             source: _iconItem
             color: "white"
             opacity: 0.3
-            visible: control.hovered && !control.selected
+            visible: control.isDesktop && control.hovered && !control.selected
         }
     }
 
@@ -167,7 +192,7 @@ Item {
         z: 2
         anchors.top: _iconItem.bottom
         anchors.horizontalCenter: parent.horizontalCenter
-        anchors.topMargin: LingmoUI.Units.smallSpacing
+        anchors.topMargin: control.isDesktop ? LingmoUI.Units.smallSpacing : LingmoUI.Units.smallSpacing * 1.5
         maximumLineCount: control.selected ? 3 : 2
         horizontalAlignment: Text.AlignHCenter
         width: parent.width - LingmoUI.Units.largeSpacing * 2 - LingmoUI.Units.smallSpacing
@@ -175,34 +200,33 @@ Item {
         elide: Qt.ElideRight
         wrapMode: Text.Wrap
         text: control.fileName
-        color: control.GridView.view.isDesktopView ? "white"
-                                                   : selected ? LingmoUI.Theme.highlightColor
-                                                              : LingmoUI.Theme.textColor
+        color: control.isDesktop ? "white"
+                                 : control.selected ? LingmoUI.Theme.highlightedTextColor
+                                                    : LingmoUI.Theme.textColor
         opacity: model.isHidden ? 0.8 : 1.0
     }
 
+    // Name pill: solid accent when selected (Finder-like)
     Rectangle {
         z: 1
-        x: _label.x + (_label.width - _label.paintedWidth) / 2 - (LingmoUI.Units.smallSpacing / 2)
-        y: _label.y
-        width: _label.paintedWidth + LingmoUI.Units.smallSpacing
-        height: _label.paintedHeight
-        radius: 4
+        x: _label.x + (_label.width - _label.paintedWidth) / 2 - LingmoUI.Units.smallSpacing
+        y: _label.y - 1
+        width: _label.paintedWidth + LingmoUI.Units.smallSpacing * 2
+        height: _label.paintedHeight + 2
+        radius: control.isDesktop ? 4 : LingmoUI.Theme.smallRadius - 2
         color: LingmoUI.Theme.highlightColor
 
         opacity: {
-            if (control.selected && control.GridView.view.isDesktopView)
+            if (control.selected)
                 return 1
 
-            if (control.selected)
-                return 0.2
-
-            if (control.hovered)
+            if (control.hovered && control.isDesktop)
                 return 0.05
 
             return 0
-
         }
+
+        Behavior on opacity { NumberAnimation { duration: 100 } }
     }
 
     DropShadow {
@@ -216,6 +240,6 @@ Item {
         spread: 0.35
         color: Qt.rgba(0, 0, 0, 0.3)
         opacity: model.isHidden ? 0.6 : 1
-        visible: control.GridView.view.isDesktopView && !control.selected
+        visible: control.isDesktop && !control.selected
     }
 }

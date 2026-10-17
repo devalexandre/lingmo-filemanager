@@ -21,6 +21,8 @@
 #include "model/placesmodel.h"
 #include "model/foldermodel.h"
 #include "model/pathbarmodel.h"
+#include "model/searchmodel.h"
+#include "helper/placeshelper.h"
 #include "model/positioner.h"
 #include "widgets/rubberband.h"
 #include "widgets/itemviewadapter.h"
@@ -55,6 +57,8 @@ int main(int argc, char *argv[])
     qmlRegisterType<DesktopSettings>(uri, 1, 0, "DesktopSettings");
     qmlRegisterType<Fm>(uri, 1, 0, "Fm");
     qmlRegisterType<ShortCut>(uri, 1, 0, "ShortCut");
+    qmlRegisterType<SearchModel>(uri, 1, 0, "SearchModel");
+    qmlRegisterSingletonType<PlacesHelper>(uri, 1, 0, "Places", &PlacesHelper::qmlInstance);
 
 #if QT_VERSION < QT_VERSION_CHECK(5, 14, 0)
     qmlRegisterType<QAction>();

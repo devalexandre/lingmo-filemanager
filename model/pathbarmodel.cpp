@@ -53,17 +53,30 @@ void PathBarModel::setUrl(const QString &url)
 
         if (m_url.startsWith("trash:/")) {
             PathBarItem *item = new PathBarItem;
-            item->name = m_url;
-            item->url = m_url;
+            item->name = tr("Trash");
+            item->url = QUrl(QStringLiteral("trash:///"));
+            item->iconName = QStringLiteral("user-trash");
             m_pathList.append(item);
         } else {
+            // Folders below home start at "Home" instead of /home/<user>
+            const QString home = QDir::homePath();
             QDir dir(m_url);
 
             do {
+                if (dir.absolutePath() == home) {
+                    PathBarItem *item = new PathBarItem;
+                    item->name = tr("Home");
+                    item->url = QUrl::fromLocalFile(home);
+                    item->iconName = QStringLiteral("user-home");
+                    m_pathList.append(item);
+                    break;
+                }
+
                 if (dir.isRoot()) {
                     PathBarItem *item = new PathBarItem;
-                    item->name = "/";
-                    item->url = "/";
+                    item->name = tr("Computer");
+                    item->url = QUrl::fromLocalFile(QStringLiteral("/"));
+                    item->iconName = QStringLiteral("drive-harddisk");
                     m_pathList.append(item);
                     break;
                 }
@@ -88,6 +101,7 @@ QHash<int, QByteArray> PathBarModel::roleNames() const
     roleNames[PathBarModel::NameRole] = "name";
     roleNames[PathBarModel::UrlRole] = "url";
     roleNames[PathBarModel::PathRole] = "path";
+    roleNames[PathBarModel::IconNameRole] = "iconName";
     return roleNames;
 }
 
@@ -119,6 +133,8 @@ QVariant PathBarModel::data(const QModelIndex &index, int role) const
         return item->url;
     case PathBarModel::PathRole:
         return item->url.toString(QUrl::PreferLocalFile);
+    case PathBarModel::IconNameRole:
+        return item->iconName;
     }
 
     return QVariant();

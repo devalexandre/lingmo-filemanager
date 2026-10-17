@@ -64,7 +64,11 @@ Application::Application(int& argc, char** argv)
 
         // Translations
         QLocale locale;
-        QString qmFilePath = QString("%1/%2.qm").arg("/usr/share/lingmo-filemanager/translations/").arg(locale.name());
+        // LINGMO_FM_TRANSLATIONS points at a build tree's .qm files (development)
+        const QString qmDir = qEnvironmentVariableIsSet("LINGMO_FM_TRANSLATIONS")
+                ? qEnvironmentVariable("LINGMO_FM_TRANSLATIONS")
+                : QStringLiteral("/usr/share/lingmo-filemanager/translations/");
+        QString qmFilePath = QString("%1/%2.qm").arg(qmDir).arg(locale.name());
         if (QFile::exists(qmFilePath)) {
             QTranslator *translator = new QTranslator(this);
             if (translator->load(qmFilePath)) {

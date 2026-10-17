@@ -68,6 +68,7 @@ GridView {
     property bool scrollDown: false
 
     signal keyPress(var event)
+    signal openInNewTabRequested(string url)
 
     cacheBuffer: Math.max(0, control.height * 1.5)
     reuseItems: true
@@ -331,13 +332,21 @@ GridView {
         anchors.fill: parent
         propagateComposedEvents: true
         preventStealing: true
-        acceptedButtons: Qt.RightButton | Qt.LeftButton
+        acceptedButtons: Qt.RightButton | Qt.LeftButton | Qt.MiddleButton
         hoverEnabled: true
         enabled: true
         z: -1
 
         onPressed: {
             control.forceActiveFocus()
+
+            // Middle click on a folder opens it in a new tab (window only)
+            if (mouse.button === Qt.MiddleButton) {
+                if (!control.isDesktopView && hoveredItem && hoveredItem.isDir)
+                    control.openInNewTabRequested(hoveredItem.url.toString())
+                mouse.accepted = true
+                return
+            }
 
             if (control.editor && childAt(mouse.x, mouse.y) !== control.editor)
                 control.editor.commit()

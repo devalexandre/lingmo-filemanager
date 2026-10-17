@@ -26,6 +26,7 @@
 struct PathBarItem {
     QString name;
     QUrl url;
+    QString iconName;
 };
 
 class PathBarModel : public QAbstractItemModel
@@ -37,7 +38,8 @@ public:
     enum DataRole {
         NameRole = Qt::UserRole + 1,
         UrlRole,
-        PathRole
+        PathRole,
+        IconNameRole
     };
     Q_ENUMS(DataRole);
 

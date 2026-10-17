@@ -33,11 +33,14 @@ Settings {
     property bool sortDirsFirst: true
 
     // UI
-    property int width: 900
-    property int height: 580
+    property int width: 1100
+    property int height: 680
     property int desktopIconSize: 72
     property int maximumIconSize: 256
     property int minimumIconSize: 64
 
     property int gridIconSize: 64
+
+    // Preview pane on the right
+    property bool showPreview: false
 }

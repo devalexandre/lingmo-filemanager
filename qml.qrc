@@ -7,6 +7,15 @@
         <file>qml/Dialogs/PropertiesDialog.qml</file>
         <file>qml/FolderListView.qml</file>
         <file>qml/Controls/IconButton.qml</file>
+        <file>qml/Controls/SymbolicIcon.qml</file>
+        <file>qml/Controls/SegmentedControl.qml</file>
+        <file>qml/Controls/EmptyState.qml</file>
+        <file>qml/Controls/SideBarItem.qml</file>
+        <file>qml/Controls/SideBarSection.qml</file>
+        <file>qml/PreviewPane.qml</file>
+        <file>qml/PdfPreview.qml</file>
+        <file>qml/SearchResultsView.qml</file>
+        <file>qml/TabStrip.qml</file>
         <file>images/dark/go-next.svg</file>
         <file>images/dark/go-previous.svg</file>
         <file>images/dark/grid.svg</file>

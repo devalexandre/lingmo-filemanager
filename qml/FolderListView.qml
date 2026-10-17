@@ -23,6 +23,8 @@ import LingmoUI.CompatibleModule 3.0 as LingmoUI
 import Lingmo.FileManager 1.0
 import Lingmo.DragDrop 1.0 as DragDrop
 
+import "./Controls"
+
 ListView {
     id: control
     // Qt 6: a Flickable grabs left-button presses to flick the view, which kept
@@ -50,11 +52,111 @@ ListView {
     property Item editor: null
     property int anchorIndex: 0
 
-    property var itemHeight: LingmoUI.Units.fontMetrics.height * 2 + LingmoUI.Units.smallSpacing
+    property var itemHeight: Math.round(LingmoUI.Units.fontMetrics.height + LingmoUI.Units.largeSpacing * 1.1)
+    property int listIconSize: LingmoUI.Units.iconSizes.smallMedium
+
+    // Columns: name fills the rest
+    property int sizeColumnWidth: 90
+    property int modifiedColumnWidth: 150
+    property int kindColumnWidth: 160
+    readonly property bool showKindColumn: width > 680
 
     property variant cachedRectangleSelection: null
 
     signal keyPress(var event)
+    signal sortRequested(int mode)
+    signal openInNewTabRequested(string url)
+
+    headerPositioning: ListView.OverlayHeader
+    header: Rectangle {
+        z: 3
+        width: control.width - control.leftMargin - control.rightMargin
+        height: LingmoUI.Units.fontMetrics.height + LingmoUI.Units.largeSpacing
+        color: LingmoUI.Theme.secondBackgroundColor
+
+        Rectangle {
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+            height: 1
+            color: Qt.rgba(LingmoUI.Theme.textColor.r, LingmoUI.Theme.textColor.g,
+                           LingmoUI.Theme.textColor.b, 0.08)
+        }
+
+        RowLayout {
+            anchors.fill: parent
+            anchors.leftMargin: LingmoUI.Units.smallSpacing
+            anchors.rightMargin: LingmoUI.Units.smallSpacing
+            anchors.bottomMargin: 1
+            spacing: LingmoUI.Units.smallSpacing
+
+            ListHeaderButton {
+                Layout.fillWidth: true
+                Layout.leftMargin: control.listIconSize
+                text: qsTr("Name")
+                mode: 0
+            }
+            ListHeaderButton {
+                Layout.preferredWidth: control.sizeColumnWidth
+                text: qsTr("Size")
+                mode: 1
+                alignRight: true
+            }
+            ListHeaderButton {
+                Layout.preferredWidth: control.modifiedColumnWidth
+                Layout.leftMargin: LingmoUI.Units.largeSpacing
+                text: qsTr("Modified")
+                mode: 2
+            }
+            ListHeaderButton {
+                visible: control.showKindColumn
+                Layout.preferredWidth: control.kindColumnWidth
+                text: qsTr("Kind")
+                mode: 6
+            }
+        }
+    }
+
+    component ListHeaderButton: AbstractButton {
+        id: _hb
+        property int mode: 0
+        property bool alignRight: false
+        readonly property bool active: control.model && control.model.sortMode === mode
+        implicitHeight: LingmoUI.Units.fontMetrics.height + LingmoUI.Units.smallSpacing
+        hoverEnabled: true
+        focusPolicy: Qt.NoFocus
+        onClicked: control.sortRequested(mode)
+
+        background: Rectangle {
+            radius: LingmoUI.Theme.smallRadius - 2
+            color: _hb.hovered ? Qt.rgba(LingmoUI.Theme.textColor.r, LingmoUI.Theme.textColor.g,
+                                         LingmoUI.Theme.textColor.b, 0.07) : "transparent"
+            Behavior on color { ColorAnimation { duration: 120 } }
+        }
+
+        contentItem: RowLayout {
+            spacing: 2
+            layoutDirection: _hb.alignRight ? Qt.RightToLeft : Qt.LeftToRight
+
+            Label {
+                text: _hb.text
+                font.pointSize: LingmoUI.Theme.fontSize * 0.9
+                font.bold: _hb.active
+                color: _hb.active ? LingmoUI.Theme.textColor : LingmoUI.Theme.disabledTextColor
+                elide: Text.ElideRight
+                Layout.leftMargin: _hb.alignRight ? 0 : 2
+            }
+
+            SymbolicIcon {
+                visible: _hb.active
+                size: 10
+                name: control.model && control.model.sortDesc ? "pan-down" : "pan-up"
+                color: LingmoUI.Theme.textColor
+            }
+
+            Item { Layout.fillWidth: true }
+        }
+    }
 
     clip: true
     cacheBuffer: width
@@ -226,7 +328,7 @@ ListView {
         anchors.fill: parent
         propagateComposedEvents: true
         preventStealing: true
-        acceptedButtons: Qt.RightButton | Qt.LeftButton
+        acceptedButtons: Qt.RightButton | Qt.LeftButton | Qt.MiddleButton
         hoverEnabled: true
         enabled: true
         z: -1
@@ -238,6 +340,14 @@ ListView {
 
         onPressed: {
             control.forceActiveFocus()
+
+            // Middle click on a folder opens it in a new tab
+            if (mouse.button === Qt.MiddleButton) {
+                if (hoveredItem && !hoveredItem.blank && hoveredItem.isDir)
+                    control.openInNewTabRequested(hoveredItem.url.toString())
+                mouse.accepted = true
+                return
+            }
 
             if (control.editor && childAt(mouse.x, mouse.y) !== control.editor)
                 control.editor.commit()

@@ -1,110 +1,241 @@
 /*
- * Copyright (C) 2021 LingmoOS Team.
- *
- * Author:     revenmartin <revenmartin@gmail.com>
+ * Copyright (C) 2021 - 2026 LingmoOS Team.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import QtQuick 2.12
-import QtQuick.Controls 2.12
-import Qt5Compat.GraphicalEffects
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
 
 import Lingmo.FileManager 1.0
 import LingmoUI.CompatibleModule 3.0 as LingmoUI
 
+import "./Controls"
+
+// Breadcrumb path bar. Folders below home start at "Home"; middle crumbs
+// that don't fit fold into a "…" menu. Clicking the empty part of the bar
+// (or Ctrl+L) turns it into an editable path.
 Item {
     id: control
 
     property string url: ""
+    readonly property bool editing: _pathEditor.visible
 
     signal itemClicked(string path)
     signal editorAccepted(string path)
+    signal middleClicked(string path)
+
+    implicitHeight: 32
 
     Rectangle {
         anchors.fill: parent
-        color: LingmoUI.Theme.darkMode ? Qt.lighter(LingmoUI.Theme.secondBackgroundColor, 1.3)
-                                     : LingmoUI.Theme.secondBackgroundColor
         radius: LingmoUI.Theme.smallRadius
-        z: -1
+        color: Qt.rgba(LingmoUI.Theme.textColor.r, LingmoUI.Theme.textColor.g,
+                       LingmoUI.Theme.textColor.b, LingmoUI.Theme.darkMode ? 0.1 : 0.06)
+        border.width: _pathEditor.visible ? 1 : 0
+        border.color: LingmoUI.Theme.highlightColor
     }
 
-    ListView {
-        id: _pathView
+    PathBarModel {
+        id: _pathBarModel
+        onUrlChanged: Qt.callLater(control.relayout)
+    }
+
+    // Empty space opens the editor
+    MouseArea {
         anchors.fill: parent
-        anchors.topMargin: 2
-        anchors.bottomMargin: 2
-        model: _pathBarModel
-        orientation: Qt.Horizontal
-        layoutDirection: Qt.LeftToRight
+        visible: !_pathEditor.visible
+        onClicked: control.openEditor()
+    }
+
+    // Number of crumbs after the first one folded into "…"
+    property int collapsed: 0
+
+    function relayout() {
+        var n = _repeater.count
+        if (n === 0)
+            return
+        var spacing = _crumbRow.spacing
+        var widths = []
+        var total = 0
+        for (var i = 0; i < n; ++i) {
+            var it = _repeater.itemAt(i)
+            var w = it ? it.fullWidth : 0
+            widths.push(w)
+            total += w + spacing
+        }
+        var available = _crumbArea.width
+        var k = 0
+        if (total > available && n > 2) {
+            var ellipsis = _ellipsis.implicitWidth + _crumbRow.spacing
+            var used = total + ellipsis
+            for (k = 1; k < n - 1; ++k) {
+                used -= widths[k] + spacing
+                if (used <= available)
+                    break
+            }
+            k = Math.min(k, n - 2)
+        }
+        collapsed = k
+    }
+
+    Item {
+        id: _crumbArea
+        anchors.fill: parent
+        anchors.leftMargin: 3
+        anchors.rightMargin: 3
+        visible: !_pathEditor.visible
         clip: true
+        onWidthChanged: Qt.callLater(control.relayout)
 
-        leftMargin: 3
-        rightMargin: 3
-        spacing: LingmoUI.Units.smallSpacing
+        Row {
+            id: _crumbRow
+            height: parent.height
+            spacing: 0
 
-        onCountChanged: {
-            _pathView.currentIndex = _pathView.count - 1
-            _pathView.positionViewAtEnd()
+            Repeater {
+                id: _repeater
+                model: _pathBarModel
+                onCountChanged: Qt.callLater(control.relayout)
+
+                delegate: Row {
+                    id: _crumb
+                    readonly property bool hidden: index >= 1 && index <= control.collapsed
+                    readonly property bool last: index === _repeater.count - 1
+                    readonly property real fullWidth: (index > 0 ? _sep.width : 0) + _button.implicitWidth
+                    visible: !hidden
+                    height: _crumbRow.height
+
+                    SymbolicIcon {
+                        id: _sep
+                        visible: index > 0
+                        width: visible ? 14 : 0
+                        anchors.verticalCenter: parent.verticalCenter
+                        name: Qt.application.layoutDirection === Qt.RightToLeft ? "pan-start" : "pan-end"
+                        size: 12
+                        color: LingmoUI.Theme.disabledTextColor
+                    }
+
+                    AbstractButton {
+                        id: _button
+                        height: parent.height - 6
+                        anchors.verticalCenter: parent.verticalCenter
+                        hoverEnabled: true
+                        focusPolicy: Qt.NoFocus
+                        implicitWidth: Math.min(_content.implicitWidth + LingmoUI.Units.largeSpacing, 220)
+                        Accessible.name: model.name
+
+                        background: Rectangle {
+                            radius: LingmoUI.Theme.smallRadius - 2
+                            color: _button.pressed ? Qt.rgba(LingmoUI.Theme.textColor.r, LingmoUI.Theme.textColor.g,
+                                                             LingmoUI.Theme.textColor.b, 0.15)
+                                 : _button.hovered ? Qt.rgba(LingmoUI.Theme.textColor.r, LingmoUI.Theme.textColor.g,
+                                                             LingmoUI.Theme.textColor.b, 0.08)
+                                 : "transparent"
+                            Behavior on color { ColorAnimation { duration: 120 } }
+                        }
+
+                        contentItem: Item {
+                            RowLayout {
+                                id: _content
+                                anchors.centerIn: parent
+                                width: Math.min(implicitWidth, parent.width)
+                                spacing: LingmoUI.Units.smallSpacing
+
+                                SymbolicIcon {
+                                    visible: model.iconName.length > 0
+                                    name: model.iconName
+                                    color: _crumb.last ? LingmoUI.Theme.highlightColor : LingmoUI.Theme.textColor
+                                }
+
+                                Label {
+                                    Layout.fillWidth: true
+                                    text: model.name
+                                    elide: Text.ElideMiddle
+                                    font.bold: _crumb.last
+                                    color: _crumb.last ? LingmoUI.Theme.highlightColor : LingmoUI.Theme.textColor
+                                }
+                            }
+                        }
+
+                        onClicked: control.itemClicked(model.path)
+
+                        MouseArea {
+                            anchors.fill: parent
+                            acceptedButtons: Qt.MiddleButton
+                            onClicked: control.middleClicked(model.path)
+                        }
+                    }
+
+                    // "…" lives right after the first crumb
+                    Item {
+                        visible: index === 0 && control.collapsed > 0
+                        width: visible ? _ellipsis.implicitWidth : 0
+                        height: parent.height
+                    }
+                }
+            }
         }
 
-        MouseArea {
-            anchors.fill: parent
-            acceptedButtons: Qt.LeftButton
-            onClicked: openEditor()
-            z: -1
-        }
-
-        highlight: Rectangle {
-            radius: LingmoUI.Theme.smallRadius
-            color: Qt.rgba(LingmoUI.Theme.highlightColor.r,
-                           LingmoUI.Theme.highlightColor.g,
-                           LingmoUI.Theme.highlightColor.b, LingmoUI.Theme.darkMode ? 0.3 : 0.1)
-            smooth: true
-        }
-
-        delegate: MouseArea {
-            id: _item
-            height: ListView.view.height - ListView.view.topMargin - ListView.view.bottomMargin
-            width: _name.width + LingmoUI.Units.largeSpacing
+        // Folded crumbs
+        AbstractButton {
+            id: _ellipsis
+            visible: control.collapsed > 0 && _repeater.count > 0
+            x: _repeater.count > 0 && _repeater.itemAt(0) ? _repeater.itemAt(0).width - implicitWidth : 0
+            height: parent.height - 6
+            anchors.verticalCenter: parent.verticalCenter
+            implicitWidth: 44
             hoverEnabled: true
-            z: -1
+            focusPolicy: Qt.NoFocus
+            Accessible.name: qsTr("Show hidden path parts")
 
-            property bool selected: index === _pathView.count - 1
-
-            onClicked: control.itemClicked(model.path)
-
-            Rectangle {
-                anchors.fill: parent
-                radius: LingmoUI.Theme.smallRadius
-                color: _item.pressed ? Qt.rgba(LingmoUI.Theme.textColor.r,
-                                                   LingmoUI.Theme.textColor.g,
-                                                   LingmoUI.Theme.textColor.b, LingmoUI.Theme.darkMode ? 0.05 : 0.1) :
-                       _item.containsMouse ? Qt.rgba(LingmoUI.Theme.textColor.r,
-                                                     LingmoUI.Theme.textColor.g,
-                                                     LingmoUI.Theme.textColor.b, LingmoUI.Theme.darkMode ? 0.1 : 0.05) :
-                                                              "transparent"
-
-                smooth: true
+            background: Rectangle {
+                radius: LingmoUI.Theme.smallRadius - 2
+                color: _ellipsis.hovered ? Qt.rgba(LingmoUI.Theme.textColor.r, LingmoUI.Theme.textColor.g,
+                                                   LingmoUI.Theme.textColor.b, 0.08) : "transparent"
+                Behavior on color { ColorAnimation { duration: 120 } }
             }
 
-            Label {
-                id: _name
-                text: model.name
-                anchors.centerIn: parent
-                color: selected ? LingmoUI.Theme.highlightColor : LingmoUI.Theme.textColor
+            contentItem: Item {
+                SymbolicIcon {
+                    anchors.left: parent.left
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 14
+                    name: Qt.application.layoutDirection === Qt.RightToLeft ? "pan-start" : "pan-end"
+                    size: 12
+                    color: LingmoUI.Theme.disabledTextColor
+                }
+
+                Label {
+                    anchors.fill: parent
+                    anchors.leftMargin: 14
+                    text: "…"
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                    font.bold: true
+                }
             }
+
+            onClicked: _hiddenMenu.popup(_ellipsis, 0, _ellipsis.height)
+        }
+    }
+
+    Menu {
+        id: _hiddenMenu
+
+        Instantiator {
+            model: control.collapsed > 0 ? control.collapsed : 0
+            delegate: MenuItem {
+                readonly property int row: control.collapsed - index    // nearest folder first
+                text: _repeater.itemAt(row) ? _pathBarModel.data(_pathBarModel.index(row, 0), 257) : ""
+                onTriggered: control.itemClicked(_pathBarModel.data(_pathBarModel.index(row, 0), 259))
+            }
+            onObjectAdded: function(index, object) { _hiddenMenu.insertItem(index, object) }
+            onObjectRemoved: function(index, object) { _hiddenMenu.removeItem(object) }
         }
     }
 
@@ -114,37 +245,19 @@ Item {
         visible: false
         selectByMouse: true
         inputMethodHints: Qt.ImhUrlCharactersOnly | Qt.ImhNoAutoUppercase
-
         text: _pathBarModel.url
-        color: LingmoUI.Theme.darkMode ? "white" : "black"
-
-        background: Rectangle {
-            radius: LingmoUI.Theme.smallRadius
-            color: LingmoUI.Theme.darkMode ? Qt.lighter(LingmoUI.Theme.secondBackgroundColor, 1.7)
-                                         : LingmoUI.Theme.secondBackgroundColor
-            border.width: 1
-            border.color: LingmoUI.Theme.highlightColor
-        }
 
         onAccepted: {
             control.editorAccepted(text)
             closeEditor()
         }
 
-        Keys.onPressed: {
-            if (event.key === Qt.Key_Escape)
-                focus = false
-        }
+        Keys.onEscapePressed: closeEditor()
 
         onActiveFocusChanged: {
-            if (!activeFocus) {
+            if (!activeFocus)
                 closeEditor()
-            }
         }
-    }
-
-    PathBarModel {
-        id: _pathBarModel
     }
 
     function updateUrl(url) {
@@ -157,11 +270,9 @@ Item {
         _pathEditor.visible = true
         _pathEditor.forceActiveFocus()
         _pathEditor.selectAll()
-        _pathView.visible = false
     }
 
     function closeEditor() {
         _pathEditor.visible = false
-        _pathView.visible = true
     }
 }

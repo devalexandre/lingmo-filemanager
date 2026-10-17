@@ -1,62 +1,47 @@
-/*
- * Copyright (C) 2021 LingmoOS Team.
- *
- * Author:     revenmartin <revenmartin@gmail.com>
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
- 
-import QtQuick 2.12
+import QtQuick
+import QtQuick.Controls
 import LingmoUI.CompatibleModule 3.0 as LingmoUI
 
-Item {
+// Icon-only toolbar button with an animated hover background.
+// Same API as the shared LingmoUI IconButton (iconName, tipText, iconSize).
+AbstractButton {
     id: control
-    width: 24
-    height: 24
 
-    property alias source: _image.source
-    property color backgroundColor: LingmoUI.Theme.darkMode ? Qt.lighter(LingmoUI.Theme.secondBackgroundColor, 1.3)
-                                                          : LingmoUI.Theme.secondBackgroundColor
-    property color hoveredColor: LingmoUI.Theme.darkMode ? Qt.lighter(LingmoUI.Theme.secondBackgroundColor, 1.7)
-                                                   : Qt.darker(LingmoUI.Theme.secondBackgroundColor, 1.2)
-    property color pressedColor: LingmoUI.Theme.darkMode ? Qt.lighter(LingmoUI.Theme.secondBackgroundColor, 1.4)
-                                                     : Qt.darker(LingmoUI.Theme.secondBackgroundColor, 1.3)
+    property string iconName: ""
+    property string tipText: ""
+    property int iconSize: LingmoUI.Units.iconSizes.small
 
-    signal clicked()
+    implicitWidth: 32
+    implicitHeight: 32
+    hoverEnabled: true
+    focusPolicy: Qt.NoFocus
+    opacity: enabled ? 1.0 : 0.4
 
-    Rectangle {
-        id: _background
-        anchors.fill: parent
+    Accessible.name: tipText
+
+    background: Rectangle {
         radius: LingmoUI.Theme.smallRadius
-        color: _mouseArea.pressed ? pressedColor : _mouseArea.containsMouse ? control.hoveredColor : control.backgroundColor
+        color: control.checked ? Qt.rgba(LingmoUI.Theme.highlightColor.r, LingmoUI.Theme.highlightColor.g,
+                                          LingmoUI.Theme.highlightColor.b, LingmoUI.Theme.darkMode ? 0.3 : 0.15)
+             : control.pressed ? Qt.rgba(LingmoUI.Theme.textColor.r, LingmoUI.Theme.textColor.g,
+                                          LingmoUI.Theme.textColor.b, 0.15)
+             : control.hovered ? Qt.rgba(LingmoUI.Theme.textColor.r, LingmoUI.Theme.textColor.g,
+                                          LingmoUI.Theme.textColor.b, 0.08)
+             : "transparent"
+
+        Behavior on color { ColorAnimation { duration: 120 } }
     }
 
-    Image {
-        id: _image
-        anchors.centerIn: parent
-        width: 18
-        height: width
-        sourceSize: Qt.size(width, height)
-        smooth: false
-        antialiasing: true
+    contentItem: Item {
+        SymbolicIcon {
+            anchors.centerIn: parent
+            size: control.iconSize
+            name: control.iconName
+            color: control.checked ? LingmoUI.Theme.highlightColor : LingmoUI.Theme.textColor
+        }
     }
 
-    MouseArea {
-        id: _mouseArea
-        anchors.fill: parent
-        hoverEnabled: true
-        acceptedButtons: Qt.LeftButton
-        onClicked: control.clicked()
-    }
+    ToolTip.visible: hovered && tipText.length > 0
+    ToolTip.text: tipText
+    ToolTip.delay: 500
 }

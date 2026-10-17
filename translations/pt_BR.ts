@@ -83,7 +83,7 @@
 <context>
     <name>DesktopView</name>
     <message>
-        <location filename="../desktop/desktopview.cpp" line="+49"/>
+        <location filename="../desktop/desktopview.cpp" line="+50"/>
         <source>Desktop</source>
         <translation>Área de trabalho</translation>
     </message>
@@ -125,9 +125,32 @@
     </message>
 </context>
 <context>
+    <name>FolderListView</name>
+    <message>
+        <location filename="../qml/FolderListView.qml" line="+96"/>
+        <source>Name</source>
+        <translation>Nome</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Size</source>
+        <translation>Tamanho</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Modified</source>
+        <translation>Modificado</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Kind</source>
+        <translation>Tipo</translation>
+    </message>
+</context>
+<context>
     <name>FolderModel</name>
     <message>
-        <location filename="../model/foldermodel.cpp" line="+279"/>
+        <location filename="../model/foldermodel.cpp" line="+284"/>
         <source>%1 item</source>
         <translation>%1 item</translation>
     </message>
@@ -137,17 +160,17 @@
         <translation>%1 itens</translation>
     </message>
     <message>
-        <location line="+105"/>
+        <location line="+109"/>
         <source>The file or folder %1 does not exist.</source>
         <translation>O arquivo ou pasta %1 não existe.</translation>
     </message>
     <message>
-        <location line="+967"/>
+        <location line="+1010"/>
         <source>Select All</source>
         <translation>Selecionar tudo</translation>
     </message>
     <message>
-        <location line="+493"/>
+        <location line="+500"/>
         <source>Open</source>
         <translation>Abrir</translation>
     </message>
@@ -172,20 +195,20 @@
         <translation>Colar</translation>
     </message>
     <message>
-        <location line="-954"/>
-        <location line="+957"/>
+        <location line="-1004"/>
+        <location line="+1007"/>
         <source>New Folder</source>
         <translation>Nova pasta</translation>
     </message>
     <message>
-        <location line="-936"/>
-        <location line="+940"/>
+        <location line="-986"/>
+        <location line="+990"/>
         <source>New Text</source>
         <translation>Novo texto</translation>
     </message>
     <message>
-        <location line="-506"/>
-        <location line="+505"/>
+        <location line="-513"/>
+        <location line="+512"/>
         <source>New Documents</source>
         <translation>Novo documento</translation>
     </message>
@@ -245,12 +268,17 @@
         <translation>Abrir em uma nova janela</translation>
     </message>
     <message>
-        <location line="-601"/>
+        <location line="-608"/>
         <source>Sort By</source>
         <translation>Ordenar por</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="-213"/>
+        <source>Trash</source>
+        <translation>Lixeira</translation>
+    </message>
+    <message>
+        <location line="+218"/>
         <source>Name</source>
         <translation>Nome</translation>
     </message>
@@ -284,109 +312,149 @@
         <source>Folders First</source>
         <translation>Pastas primeiro</translation>
     </message>
-    <message><source>Extract Here</source><translation>Extrair aqui</translation></message>
-    <message><source>Extract To…</source><translation>Extrair para…</translation></message>
-    <message><source>Compress…</source><translation>Compactar…</translation></message>
-    <message><source>Archives</source><translation>Arquivos compactados</translation></message>
-    <message><source>Could not start Ark. Install Ark to extract and compress files.</source><translation>Não foi possível iniciar o Ark. Instale o Ark para extrair e compactar arquivos.</translation></message>
+    <message>
+        <location line="+578"/>
+        <source>Open in New Tab</source>
+        <translation>Abrir em nova aba</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <location line="+215"/>
+        <source>Add to Favorites</source>
+        <translation>Adicionar aos favoritos</translation>
+    </message>
+    <message>
+        <location line="-190"/>
+        <source>Extract Here</source>
+        <translation>Extrair aqui</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Extract To…</source>
+        <translation>Extrair para…</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Compress…</source>
+        <translation>Compactar…</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Archives</source>
+        <translation>Arquivos compactados</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Could not start Ark. Install Ark to extract and compress files.</source>
+        <translation>Não foi possível iniciar o Ark. Instale o Ark para extrair e compactar arquivos.</translation>
+    </message>
+    <message>
+        <location line="+179"/>
+        <source>Remove from Favorites</source>
+        <translation>Remover dos favoritos</translation>
+    </message>
 </context>
 <context>
     <name>FolderPage</name>
     <message>
-        <location filename="../qml/FolderPage.qml" line="+147"/>
+        <location filename="../qml/FolderPage.qml" line="+221"/>
         <source>Empty folder</source>
         <translation>Pasta vazia</translation>
     </message>
     <message>
-        <location line="+59"/>
+        <location line="+118"/>
+        <source>Zoom (Ctrl+wheel)</source>
+        <translation>Zoom (Ctrl+roda do mouse)</translation>
+    </message>
+    <message>
+        <location line="+44"/>
         <source>Open</source>
         <translation>Abrir</translation>
     </message>
     <message>
-        <location line="-142"/>
-        <location line="+147"/>
-        <source>Properties</source>
-        <translation>Propriedades</translation>
+        <location line="-337"/>
+        <source>Trash</source>
+        <translation>Lixeira</translation>
     </message>
     <message>
-        <location line="-157"/>
-        <source>File</source>
-        <translation>Arquivo</translation>
+        <location line="+176"/>
+        <source>Drag files here or create a new folder.</source>
+        <translation>Arraste arquivos para cá ou crie uma nova pasta.</translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>New Folder</source>
-        <translation>Nova pasta</translation>
-    </message>
-    <message>
-        <location line="+14"/>
-        <source>Quit</source>
-        <translation>Sair</translation>
-    </message>
-    <message>
-        <location line="+6"/>
-        <source>Edit</source>
-        <translation>Editar</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Select All</source>
-        <translation>Selecionar tudo</translation>
-    </message>
-    <message>
-        <location line="+7"/>
-        <source>Cut</source>
-        <translation>Recortar</translation>
-    </message>
-    <message>
-        <location line="+5"/>
-        <source>Copy</source>
-        <translation>Copiar</translation>
-    </message>
-    <message>
-        <location line="+5"/>
-        <source>Paste</source>
-        <translation>Colar</translation>
-    </message>
-    <message>
-        <location line="+6"/>
-        <source>Help</source>
-        <translation>Ajuda</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>About</source>
-        <translation>Sobre</translation>
-    </message>
-    <message>
-        <location line="+8"/>
-        <source>File Manager</source>
-        <translation>Gerenciador de arquivos</translation>
+        <location line="+10"/>
+        <source>Trash is empty</source>
+        <translation>A lixeira está vazia</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>A file manager designed for LingmoOS.</source>
-        <translation>Um gerenciador de arquivos projetado para o LingmoOS.</translation>
+        <source>Items you delete stay here until you empty the trash.</source>
+        <translation>Os itens apagados ficam aqui até você esvaziar a lixeira.</translation>
     </message>
     <message>
-        <location line="+159"/>
+        <location line="+7"/>
+        <source>Search in “%1”</source>
+        <translation>Pesquisar em “%1”</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Type part of a file name. Subfolders are searched too.</source>
+        <translation>Digite parte do nome de um arquivo. As subpastas também são pesquisadas.</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>No results</source>
+        <translation>Nenhum resultado</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Nothing named “%1” in “%2”.</source>
+        <translation>Nada com o nome “%1” em “%2”.</translation>
+    </message>
+    <message>
+        <location line="+38"/>
+        <source>%1 result</source>
+        <translation>%1 resultado</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>%1 results</source>
+        <translation>%1 resultados</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>showing the first ones</source>
+        <translation>mostrando os primeiros</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>%1 item</source>
         <translation>%1 item</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+0"/>
         <source>%1 items</source>
         <translation>%1 itens</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+2"/>
         <source>%1 selected</source>
         <translation>%1 selecionado(s)</translation>
     </message>
     <message>
-        <location line="+25"/>
+        <location line="+15"/>
         <source>Empty Trash</source>
         <translation>Esvaziar Lixeira</translation>
+    </message>
+    <message>
+        <location line="+79"/>
+        <source>Open in New Tab</source>
+        <translation>Abrir em nova aba</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Show in Folder</source>
+        <translation>Mostrar na pasta</translation>
     </message>
 </context>
 <context>
@@ -420,49 +488,113 @@
 <context>
     <name>OptionsMenu</name>
     <message>
-        <location filename="../qml/OptionsMenu.qml" line="+47"/>
-        <source>Icons</source>
-        <translation>Ícones</translation>
-    </message>
-    <message>
-        <location line="+38"/>
-        <source>List</source>
-        <translation>Lista</translation>
-    </message>
-    <message>
-        <location line="+42"/>
+        <location filename="../qml/OptionsMenu.qml" line="+44"/>
         <source>Name</source>
         <translation>Nome</translation>
     </message>
     <message>
-        <location line="+38"/>
+        <location line="+6"/>
         <source>Date</source>
         <translation>Data</translation>
     </message>
     <message>
-        <location line="+24"/>
+        <location line="+6"/>
         <source>Type</source>
         <translation>Tipo</translation>
     </message>
     <message>
-        <location line="+38"/>
+        <location line="+6"/>
         <source>Size</source>
         <translation>Tamanho</translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+8"/>
         <source>Ascending</source>
         <translation>Crescente</translation>
     </message>
     <message>
-        <location line="+26"/>
+        <location line="+6"/>
         <source>Descending</source>
         <translation>Decrescente</translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+8"/>
         <source>Folders First</source>
         <translation>Pastas primeiro</translation>
+    </message>
+</context>
+<context>
+    <name>PathBar</name>
+    <message>
+        <location filename="../qml/PathBar.qml" line="+194"/>
+        <source>Show hidden path parts</source>
+        <translation>Mostrar partes ocultas do caminho</translation>
+    </message>
+</context>
+<context>
+    <name>PathBarModel</name>
+    <message>
+        <location filename="../model/pathbarmodel.cpp" line="+56"/>
+        <source>Trash</source>
+        <translation>Lixeira</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Home</source>
+        <translation>Pasta pessoal</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Computer</source>
+        <translation>Computador</translation>
+    </message>
+</context>
+<context>
+    <name>PlacesHelper</name>
+    <message>
+        <location filename="../helper/placeshelper.cpp" line="+183"/>
+        <source>Home</source>
+        <translation>Pasta pessoal</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Computer</source>
+        <translation>Computador</translation>
+    </message>
+    <message>
+        <location line="+125"/>
+        <source>%1 free of %2</source>
+        <translation>%1 livres de %2</translation>
+    </message>
+    <message>
+        <location line="+35"/>
+        <source>%1 item</source>
+        <translation>%1 item</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>%1 items</source>
+        <translation>%1 itens</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Read and write</source>
+        <translation>Leitura e escrita</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Read only</source>
+        <translation>Somente leitura</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>No access</source>
+        <translation>Sem acesso</translation>
+    </message>
+    <message>
+        <location line="+75"/>
+        <source>Dimensions</source>
+        <translation>Dimensões</translation>
     </message>
 </context>
 <context>
@@ -525,6 +657,54 @@
     </message>
 </context>
 <context>
+    <name>PreviewPane</name>
+    <message>
+        <location filename="../qml/PreviewPane.qml" line="+141"/>
+        <source>%1 items selected</source>
+        <translation>%1 itens selecionados</translation>
+    </message>
+    <message>
+        <location line="+38"/>
+        <source>Information</source>
+        <translation>Informações</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Size</source>
+        <translation>Tamanho</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Modified</source>
+        <translation>Modificado</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Created</source>
+        <translation>Criado</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Last opened</source>
+        <translation>Último acesso</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Permissions</source>
+        <translation>Permissões</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Owner</source>
+        <translation>Proprietário</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Where</source>
+        <translation>Local</translation>
+    </message>
+</context>
+<context>
     <name>PropertiesDialog</name>
     <message>
         <location filename="../qml/Dialogs/PropertiesDialog.qml" line="+100"/>
@@ -573,34 +753,286 @@
     </message>
 </context>
 <context>
+    <name>SearchResultsView</name>
+    <message>
+        <location filename="../qml/SearchResultsView.qml" line="+57"/>
+        <source>Name</source>
+        <translation>Nome</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Folder</source>
+        <translation>Pasta</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Size</source>
+        <translation>Tamanho</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Modified</source>
+        <translation>Modificado</translation>
+    </message>
+</context>
+<context>
     <name>SideBar</name>
     <message>
-        <location filename="../qml/SideBar.qml" line="+126"/>
+        <location filename="../qml/SideBar.qml" line="+100"/>
+        <source>Favorites</source>
+        <translation>Favoritos</translation>
+    </message>
+    <message>
+        <location line="+41"/>
+        <source>Drag folders here</source>
+        <translation>Arraste pastas para cá</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>Recent</source>
+        <translation>Recentes</translation>
+    </message>
+    <message>
+        <location line="+20"/>
+        <source>Places</source>
+        <translation>Locais</translation>
+    </message>
+    <message>
+        <location line="+26"/>
+        <source>Boxes</source>
+        <translation>Caixas</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Isolated app boxes</source>
+        <translation>Caixas isoladas de aplicativos</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Drives</source>
+        <translation>Discos</translation>
+    </message>
+    <message>
+        <location line="+49"/>
+        <location line="+63"/>
+        <location line="+45"/>
         <source>Open</source>
         <translation>Abrir</translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="-98"/>
+        <location line="+58"/>
+        <source>Open in New Tab</source>
+        <translation>Abrir em nova aba</translation>
+    </message>
+    <message>
+        <location line="-52"/>
+        <location line="+57"/>
         <source>Open in new window</source>
         <translation>Abrir em uma nova janela</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="-51"/>
+        <location line="+70"/>
+        <source>Remove from Favorites</source>
+        <translation>Remover dos favoritos</translation>
+    </message>
+    <message>
+        <location line="-70"/>
+        <source>Add to Favorites</source>
+        <translation>Adicionar aos favoritos</translation>
+    </message>
+    <message>
+        <location line="+12"/>
         <source>Eject</source>
         <translation>Ejetar</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+8"/>
         <source>Unmount</source>
         <translation>Desmontar</translation>
+    </message>
+    <message>
+        <location line="+38"/>
+        <source>Move Up</source>
+        <translation>Mover para cima</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Move Down</source>
+        <translation>Mover para baixo</translation>
+    </message>
+    <message>
+        <location line="+27"/>
+        <source>Show in Folder</source>
+        <translation>Mostrar na pasta</translation>
+    </message>
+</context>
+<context>
+    <name>TabStrip</name>
+    <message>
+        <location filename="../qml/TabStrip.qml" line="+69"/>
+        <source>Close Tab</source>
+        <translation>Fechar aba</translation>
+    </message>
+    <message>
+        <location line="+20"/>
+        <source>New Tab (Ctrl+T)</source>
+        <translation>Nova aba (Ctrl+T)</translation>
     </message>
 </context>
 <context>
     <name>main</name>
     <message>
-        <location filename="../qml/main.qml" line="+35"/>
+        <location filename="../qml/main.qml" line="+37"/>
+        <location line="+96"/>
         <source>File Manager</source>
         <translation>Gerenciador de arquivos</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>A file manager designed for LingmoOS.</source>
+        <translation>Um gerenciador de arquivos projetado para o LingmoOS.</translation>
+    </message>
+    <message>
+        <location line="+30"/>
+        <source>File</source>
+        <translation>Arquivo</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>New Tab</source>
+        <translation>Nova aba</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>New Folder</source>
+        <translation>Nova pasta</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Properties</source>
+        <translation>Propriedades</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Close Tab</source>
+        <translation>Fechar aba</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Quit</source>
+        <translation>Sair</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Edit</source>
+        <translation>Editar</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Select All</source>
+        <translation>Selecionar tudo</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Cut</source>
+        <translation>Recortar</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Copy</source>
+        <translation>Copiar</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Paste</source>
+        <translation>Colar</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Search</source>
+        <translation>Pesquisar</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>View</source>
+        <translation>Exibir</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Icons</source>
+        <translation>Ícones</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>List</source>
+        <translation>Lista</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Preview Pane</source>
+        <translation>Painel de visualização</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Help</source>
+        <translation>Ajuda</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>About</source>
+        <translation>Sobre</translation>
+    </message>
+    <message>
+        <location line="+26"/>
+        <source>Back (Alt+Left)</source>
+        <translation>Voltar (Alt+Esquerda)</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Forward (Alt+Right)</source>
+        <translation>Avançar (Alt+Direita)</translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>Search in “%1”</source>
+        <translation>Pesquisar em “%1”</translation>
+    </message>
+    <message>
+        <location line="+28"/>
+        <source>Close search (Esc)</source>
+        <translation>Fechar pesquisa (Esc)</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Search (Ctrl+F)</source>
+        <translation>Pesquisar (Ctrl+F)</translation>
+    </message>
+    <message>
+        <location line="+14"/>
+        <source>Icons (Ctrl+1)</source>
+        <translation>Ícones (Ctrl+1)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>List (Ctrl+2)</source>
+        <translation>Lista (Ctrl+2)</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Sort</source>
+        <translation>Ordenar</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>New Folder (Ctrl+Shift+N)</source>
+        <translation>Nova pasta (Ctrl+Shift+N)</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Preview Pane (Alt+P)</source>
+        <translation>Painel de visualização (Alt+P)</translation>
     </message>
 </context>
 </TS>

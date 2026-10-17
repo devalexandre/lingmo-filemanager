@@ -22,306 +22,67 @@ import QtQuick.Layouts 1.12
 import QtQuick.Controls 2.12
 import LingmoUI.CompatibleModule 3.0 as LingmoUI
 
+// Sort menu of the toolbar (the view itself is chosen with the segmented control)
 LingmoUI.DesktopMenu {
     id: control
 
-    MenuItem {
-        Layout.fillWidth: true
-
-        Image {
-            id: _gridIcon
-            anchors.verticalCenter: parent.verticalCenter
-            anchors.left: parent.left
-            anchors.leftMargin: LingmoUI.Units.largeSpacing
-            source: LingmoUI.Theme.darkMode ? "qrc:/images/dark/grid.svg" : "qrc:/images/light/grid.svg"
-            sourceSize: Qt.size(width, height)
-            width: 22
-            height: width
-            smooth: false
+    // Checkable item whose check mark always mirrors "on" (a click would
+    // otherwise replace the binding with a plain toggle)
+    component CheckItem: MenuItem {
+        id: _item
+        property bool on: false
+        signal chosen()
+        checkable: true
+        checked: on
+        onTriggered: {
+            chosen()
+            _item.checked = Qt.binding(function() { return _item.on })
         }
-
-        Text {
-            anchors.left: _gridIcon.right
-            anchors.verticalCenter: parent.verticalCenter
-            anchors.leftMargin: LingmoUI.Units.largeSpacing
-            text: qsTr("Icons")
-            color: LingmoUI.Theme.textColor
-        }
-
-        Image {
-            anchors.verticalCenter: parent.verticalCenter
-            anchors.right: parent.right
-            anchors.rightMargin: LingmoUI.Units.largeSpacing * 1.5
-            source: LingmoUI.Theme.darkMode ? "qrc:/images/dark/checked.svg" : "qrc:/images/light/checked.svg"
-            sourceSize: Qt.size(width, height)
-            width: 22
-            height: width
-            visible: settings.viewMethod === 1
-            smooth: false
-        }
-
-        onTriggered: settings.viewMethod = 1
     }
 
-    MenuItem {
-        Layout.fillWidth: true
-
-        Image {
-            id: _listIcon
-            anchors.verticalCenter: parent.verticalCenter
-            anchors.left: parent.left
-            anchors.leftMargin: LingmoUI.Units.largeSpacing
-            source: LingmoUI.Theme.darkMode ? "qrc:/images/dark/list.svg" : "qrc:/images/light/list.svg"
-            sourceSize: Qt.size(width, height)
-            width: 22
-            height: width
-            smooth: false
-        }
-
-        Text {
-            anchors.left: _listIcon.right
-            anchors.verticalCenter: parent.verticalCenter
-            anchors.leftMargin: LingmoUI.Units.largeSpacing
-            text: qsTr("List")
-            color: LingmoUI.Theme.textColor
-        }
-
-        Image {
-            anchors.verticalCenter: parent.verticalCenter
-            anchors.right: parent.right
-            anchors.rightMargin: LingmoUI.Units.largeSpacing * 1.5
-            source: LingmoUI.Theme.darkMode ? "qrc:/images/dark/checked.svg" : "qrc:/images/light/checked.svg"
-            sourceSize: Qt.size(width, height)
-            width: 22
-            height: width
-            visible: settings.viewMethod === 0
-            smooth: false
-        }
-
-        onTriggered: settings.viewMethod = 0
+    CheckItem {
+        text: qsTr("Name")
+        on: settings.sortMode === 0
+        onChosen: settings.sortMode = 0
     }
 
-    MenuSeparator {
-        Layout.fillWidth: true
+    CheckItem {
+        text: qsTr("Date")
+        on: settings.sortMode === 2
+        onChosen: settings.sortMode = 2
     }
 
-    MenuItem {
-        Layout.fillWidth: true
-
-//        Image {
-//            id: orderByNameIcon
-//            anchors.verticalCenter: parent.verticalCenter
-//            anchors.left: parent.left
-//            anchors.leftMargin: LingmoUI.Units.largeSpacing
-//            source: LingmoUI.Theme.darkMode ? "qrc:/images/dark/order_by_name.svg" : "qrc:/images/light/order_by_name.svg"
-//            sourceSize: Qt.size(width, height)
-//            width: 22
-//            height: width
-//            smooth: false
-//        }
-
-        Text {
-            anchors.left: parent.left
-            anchors.verticalCenter: parent.verticalCenter
-            anchors.leftMargin: LingmoUI.Units.largeSpacing
-            text: qsTr("Name")
-            color: LingmoUI.Theme.textColor
-        }
-
-        Image {
-            anchors.verticalCenter: parent.verticalCenter
-            anchors.right: parent.right
-            anchors.rightMargin: LingmoUI.Units.largeSpacing * 1.5
-            source: LingmoUI.Theme.darkMode ? "qrc:/images/dark/checked.svg" : "qrc:/images/light/checked.svg"
-            sourceSize: Qt.size(width, height)
-            height: width
-            width: 22
-            visible: settings.sortMode === 0
-            smooth: false
-        }
-
-        onTriggered: settings.sortMode = 0
+    CheckItem {
+        text: qsTr("Type")
+        on: settings.sortMode === 6
+        onChosen: settings.sortMode = 6
     }
 
-    MenuItem {
-        Layout.fillWidth: true
-
-//        Image {
-//            id: orderByDateIcon
-//            anchors.verticalCenter: parent.verticalCenter
-//            anchors.left: parent.left
-//            anchors.leftMargin: LingmoUI.Units.largeSpacing
-//            source: LingmoUI.Theme.darkMode ? "qrc:/images/dark/date.svg" : "qrc:/images/light/date.svg"
-//            sourceSize: Qt.size(width, height)
-//            width: 22
-//            height: width
-//            smooth: false
-//        }
-
-        Text {
-            anchors.left: parent.left
-            anchors.verticalCenter: parent.verticalCenter
-            anchors.leftMargin: LingmoUI.Units.largeSpacing
-            text: qsTr("Date")
-            color: LingmoUI.Theme.textColor
-        }
-
-        Image {
-            anchors.verticalCenter: parent.verticalCenter
-            anchors.right: parent.right
-            anchors.rightMargin: LingmoUI.Units.largeSpacing * 1.5
-            source: LingmoUI.Theme.darkMode ? "qrc:/images/dark/checked.svg" : "qrc:/images/light/checked.svg"
-            sourceSize: Qt.size(width, height)
-            width: 22
-            height: width
-            visible: settings.sortMode === 2
-            smooth: false
-        }
-
-        onTriggered: settings.sortMode = 2
-    }
-
-    MenuItem {
-        Text {
-            anchors.left: parent.left
-            anchors.verticalCenter: parent.verticalCenter
-            anchors.leftMargin: LingmoUI.Units.largeSpacing
-            text: qsTr("Type")
-            color: LingmoUI.Theme.textColor
-        }
-
-        Image {
-            anchors.verticalCenter: parent.verticalCenter
-            anchors.right: parent.right
-            anchors.rightMargin: LingmoUI.Units.largeSpacing * 1.5
-            source: LingmoUI.Theme.darkMode ? "qrc:/images/dark/checked.svg" : "qrc:/images/light/checked.svg"
-            sourceSize: Qt.size(width, height)
-            width: 22
-            height: width
-            visible: settings.sortMode === 6
-            smooth: false
-        }
-
-        onTriggered: settings.sortMode = 6
-    }
-
-    MenuItem {
-        Layout.fillWidth: true
-
-//        Image {
-//            id: orderBySizeIcon
-//            anchors.verticalCenter: parent.verticalCenter
-//            anchors.left: parent.left
-//            anchors.leftMargin: LingmoUI.Units.largeSpacing
-//            source: LingmoUI.Theme.darkMode ? "qrc:/images/dark/size.svg" : "qrc:/images/light/size.svg"
-//            sourceSize: Qt.size(width, height)
-//            width: 22
-//            height: width
-//            smooth: false
-//        }
-
-        Text {
-            anchors.left: parent.left
-            anchors.verticalCenter: parent.verticalCenter
-            anchors.leftMargin: LingmoUI.Units.largeSpacing
-            text: qsTr("Size")
-            color: LingmoUI.Theme.textColor
-        }
-
-        Image {
-            anchors.verticalCenter: parent.verticalCenter
-            anchors.right: parent.right
-            anchors.rightMargin: LingmoUI.Units.largeSpacing * 1.5
-            source: LingmoUI.Theme.darkMode ? "qrc:/images/dark/checked.svg" : "qrc:/images/light/checked.svg"
-            sourceSize: Qt.size(width, height)
-            width: 22
-            height: width
-            visible: settings.sortMode === 1
-            smooth: false
-        }
-
-        onTriggered: settings.sortMode = 1
+    CheckItem {
+        text: qsTr("Size")
+        on: settings.sortMode === 1
+        onChosen: settings.sortMode = 1
     }
 
     MenuSeparator {}
 
-    MenuItem {
-        Layout.fillWidth: true
-
-        Text {
-            anchors.left: parent.left
-            anchors.verticalCenter: parent.verticalCenter
-            anchors.leftMargin: LingmoUI.Units.largeSpacing
-            text: qsTr("Ascending")
-            color: LingmoUI.Theme.textColor
-        }
-
-        Image {
-            anchors.verticalCenter: parent.verticalCenter
-            anchors.right: parent.right
-            anchors.rightMargin: LingmoUI.Units.largeSpacing * 1.5
-            source: LingmoUI.Theme.darkMode ? "qrc:/images/dark/checked.svg" : "qrc:/images/light/checked.svg"
-            sourceSize: Qt.size(width, height)
-            height: width
-            width: 22
-            visible: !settings.sortDesc
-            smooth: false
-        }
-
-        onTriggered: settings.sortDesc = false
+    CheckItem {
+        text: qsTr("Ascending")
+        on: !settings.sortDesc
+        onChosen: settings.sortDesc = false
     }
 
-    MenuItem {
-        Layout.fillWidth: true
-
-        Text {
-            anchors.left: parent.left
-            anchors.verticalCenter: parent.verticalCenter
-            anchors.leftMargin: LingmoUI.Units.largeSpacing
-            text: qsTr("Descending")
-            color: LingmoUI.Theme.textColor
-        }
-
-        Image {
-            anchors.verticalCenter: parent.verticalCenter
-            anchors.right: parent.right
-            anchors.rightMargin: LingmoUI.Units.largeSpacing * 1.5
-            source: LingmoUI.Theme.darkMode ? "qrc:/images/dark/checked.svg" : "qrc:/images/light/checked.svg"
-            sourceSize: Qt.size(width, height)
-            height: width
-            width: 22
-            visible: settings.sortDesc
-            smooth: false
-        }
-
-        onTriggered: settings.sortDesc = true
+    CheckItem {
+        text: qsTr("Descending")
+        on: settings.sortDesc
+        onChosen: settings.sortDesc = true
     }
 
     MenuSeparator {}
 
-    MenuItem {
-        Layout.fillWidth: true
-
-        Text {
-            anchors.left: parent.left
-            anchors.verticalCenter: parent.verticalCenter
-            anchors.leftMargin: LingmoUI.Units.largeSpacing
-            text: qsTr("Folders First")
-            color: LingmoUI.Theme.textColor
-        }
-
-        Image {
-            anchors.verticalCenter: parent.verticalCenter
-            anchors.right: parent.right
-            anchors.rightMargin: LingmoUI.Units.largeSpacing * 1.5
-            source: LingmoUI.Theme.darkMode ? "qrc:/images/dark/checked.svg" : "qrc:/images/light/checked.svg"
-            sourceSize: Qt.size(width, height)
-            height: width
-            width: 22
-            visible: settings.sortDirsFirst
-            smooth: false
-        }
-
-        onTriggered: settings.sortDirsFirst = !settings.sortDirsFirst
+    CheckItem {
+        text: qsTr("Folders First")
+        on: settings.sortDirsFirst
+        onChosen: settings.sortDirsFirst = !settings.sortDirsFirst
     }
 }

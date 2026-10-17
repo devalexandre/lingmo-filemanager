@@ -1,40 +1,38 @@
 /*
- * Copyright (C) 2021 LingmoOS Team.
- *
- * Author:     revenmartin <revenmartin@gmail.com>
+ * Copyright (C) 2021 - 2026 LingmoOS Team.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import QtQuick 2.12
-import QtQuick.Layouts 1.12
-import QtQuick.Controls 2.12
-import QtQuick.Window 2.12
-import Qt5Compat.GraphicalEffects
+import QtQuick
+import QtQuick.Layouts
+import QtQuick.Controls
 
 import LingmoUI.CompatibleModule 3.0 as LingmoUI
 import Lingmo.FileManager 1.0
+import Lingmo.DragDrop 1.0 as DragDrop
 
-ListView {
+import "./Controls"
+
+// Settings-style sidebar: Favorites (drop folders in), Recent files, Places
+// (home folders, Trash, Boxes) and Drives with a usage bar.
+Rectangle {
     id: sideBar
+
+    property string currentUrl: ""
+    property int topInset: 0
 
     signal clicked(string path)
     signal openInNewWindow(string path)
+    signal openInNewTab(string path)
+    signal openFile(string path)
 
-    LingmoUI.WheelHandler {
-        target: sideBar
-    }
+    implicitWidth: 230
+    color: LingmoUI.Theme.darkMode ? Qt.rgba(0.11, 0.11, 0.15, 0.55) : "#EDEEF2"
+    Behavior on color { ColorAnimation { duration: 200; easing.type: Easing.Linear } }
 
     Fm {
         id: _fm
@@ -42,194 +40,348 @@ ListView {
 
     PlacesModel {
         id: placesModel
-        onDeviceSetupDone: sideBar.clicked(filePath)    // 设备挂载上后，模拟点击了该设备以打开该页面
+        onDeviceSetupDone: sideBar.clicked(filePath)    // open a device once it is mounted
     }
 
-    model: placesModel
-    clip: true
-
-    leftMargin: LingmoUI.Units.smallSpacing * 1.5
-    rightMargin: LingmoUI.Units.smallSpacing * 1.5
-    bottomMargin: LingmoUI.Units.smallSpacing
-    spacing: LingmoUI.Units.smallSpacing
-
-    ScrollBar.vertical: ScrollBar {
-        bottomPadding: LingmoUI.Units.smallSpacing
-    }
-
-    highlightFollowsCurrentItem: true
-    highlightMoveDuration: 0
-    highlightResizeDuration : 0
-
-    highlight: Rectangle {
-        radius: LingmoUI.Theme.mediumRadius
-        color: LingmoUI.Theme.secondBackgroundColor
-        smooth: true
-
-        Rectangle {
-            anchors.fill: parent
-            radius: LingmoUI.Theme.mediumRadius
-            color: Qt.rgba(LingmoUI.Theme.highlightColor.r,
-                           LingmoUI.Theme.highlightColor.g,
-                           LingmoUI.Theme.highlightColor.b, LingmoUI.Theme.darkMode ? 0.3 : 0.2)
+    // Symbolic glyph and tile colour for each standard place
+    function placeStyle(iconPath) {
+        switch (iconPath) {
+        case "folder-home.svg": return { icon: "user-home", color: LingmoUI.Theme.blueColor }
+        case "folder-desktop.svg": return { icon: "user-desktop", color: LingmoUI.Theme.purpleColor }
+        case "folder-document.svg": return { icon: "folder-documents", color: LingmoUI.Theme.orangeColor }
+        case "folder-download.svg": return { icon: "folder-download", color: LingmoUI.Theme.greenColor }
+        case "folder-apps.svg": return { icon: "view-app-grid", color: LingmoUI.Theme.blueColor }
+        case "folder-music.svg": return { icon: "folder-music", color: LingmoUI.Theme.redColor }
+        case "folder-picture.svg": return { icon: "folder-pictures", color: LingmoUI.Theme.pinkColor }
+        case "folder-video.svg": return { icon: "folder-videos", color: LingmoUI.Theme.purpleColor }
+        case "user-trash.svg": return { icon: Places.trashCount > 0 ? "user-trash-full" : "user-trash", color: LingmoUI.Theme.greyColor }
+        case "drive-optical.svg": return { icon: "media-optical", color: LingmoUI.Theme.greyColor }
+        case "drive-removable-media-usb.svg": return { icon: "drive-removable-media", color: LingmoUI.Theme.orangeColor }
+        default: return { icon: "drive-harddisk", color: LingmoUI.Theme.greyColor }
         }
     }
 
-    section.property: "category"
-    section.delegate: Item {
-        width: ListView.view.width - ListView.view.leftMargin - ListView.view.rightMargin
-        height: LingmoUI.Units.fontMetrics.height + LingmoUI.Units.largeSpacing + LingmoUI.Units.smallSpacing
+    function samePath(a, b) {
+        return Places.urlToPath(a) === Places.urlToPath(b)
+    }
 
-        Text {
-            anchors.left: parent.left
-            anchors.top: parent.top
-            anchors.leftMargin: Qt.application.layoutDirection === Qt.RightToLeft ? 0 : LingmoUI.Units.smallSpacing
-            anchors.rightMargin: LingmoUI.Units.smallSpacing
-            anchors.topMargin: LingmoUI.Units.largeSpacing
-            anchors.bottomMargin: LingmoUI.Units.smallSpacing
-            color: LingmoUI.Theme.textColor
-            font.pointSize: 9
-            font.bold: true
-            text: section
+    Flickable {
+        id: _flickable
+        anchors.fill: parent
+        anchors.topMargin: sideBar.topInset
+        contentHeight: _column.height + LingmoUI.Units.largeSpacing
+        boundsBehavior: Flickable.StopAtBounds
+        clip: true
+
+        ScrollBar.vertical: ScrollBar {}
+
+        LingmoUI.WheelHandler {
+            target: _flickable
+        }
+
+        Column {
+            id: _column
+            x: LingmoUI.Units.largeSpacing * 0.75
+            width: _flickable.width - LingmoUI.Units.largeSpacing * 1.5
+            spacing: 2
+
+            // ------------------------------------------------------ Favorites
+            Item {
+                width: parent.width
+                height: _favColumn.height
+
+                Column {
+                    id: _favColumn
+                    width: parent.width
+                    spacing: 2
+
+                    SideBarSection {
+                        id: _favSection
+                        title: qsTr("Favorites")
+                    }
+
+                    Repeater {
+                        model: _favSection.expanded ? Places.favorites : []
+
+                        SideBarItem {
+                            width: _favColumn.width
+                            title: modelData.name
+                            iconName: modelData.path === Places.homePath ? "user-home" : "folder"
+                            tileColor: LingmoUI.Theme.blueColor
+                            dimmed: !modelData.exists
+                            toolTipText: modelData.path
+                            isCurrent: sideBar.samePath(sideBar.currentUrl, modelData.path)
+                            onClicked: sideBar.clicked(modelData.path)
+                            onMiddleClicked: sideBar.openInNewTab(modelData.path)
+                            onRightClicked: _favMenu.popupFor(modelData.path, index)
+                        }
+                    }
+
+                    // Shown while there are no favorites, or while dragging over
+                    Rectangle {
+                        visible: _favSection.expanded && (Places.favorites.length === 0 || _favDrop.containsDrag)
+                        width: parent.width
+                        height: _hint.implicitHeight + LingmoUI.Units.largeSpacing
+                        radius: LingmoUI.Theme.mediumRadius
+                        color: _favDrop.containsDrag ? Qt.rgba(LingmoUI.Theme.highlightColor.r, LingmoUI.Theme.highlightColor.g,
+                                                                LingmoUI.Theme.highlightColor.b, 0.15)
+                                                     : "transparent"
+                        border.width: 1
+                        border.color: _favDrop.containsDrag ? LingmoUI.Theme.highlightColor
+                                                            : Qt.rgba(LingmoUI.Theme.textColor.r, LingmoUI.Theme.textColor.g,
+                                                                      LingmoUI.Theme.textColor.b, 0.15)
+
+                        Label {
+                            id: _hint
+                            anchors.fill: parent
+                            anchors.margins: LingmoUI.Units.smallSpacing
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                            wrapMode: Text.Wrap
+                            text: qsTr("Drag folders here")
+                            font.pointSize: LingmoUI.Theme.fontSize * 0.9
+                            color: LingmoUI.Theme.disabledTextColor
+                        }
+                    }
+                }
+
+                DragDrop.DropArea {
+                    id: _favDrop
+                    anchors.fill: parent
+                    onDrop: function(event) {
+                        var urls = event.mimeData.urls
+                        for (var i = 0; i < urls.length; ++i)
+                            Places.addFavorite(urls[i])
+                        event.accept(Qt.LinkAction)
+                    }
+                }
+            }
+
+            // -------------------------------------------------------- Recents
+            SideBarSection {
+                id: _recentSection
+                title: qsTr("Recent")
+                visible: Places.recentFiles.length > 0
+            }
+
+            Repeater {
+                model: _recentSection.expanded ? Places.recentFiles : []
+
+                SideBarItem {
+                    width: _column.width
+                    title: modelData.name
+                    iconSource: "image://icontheme/" + modelData.iconName
+                    toolTipText: modelData.path
+                    onClicked: sideBar.openFile(modelData.path)
+                    onRightClicked: _recentMenu.popupFor(modelData.path)
+                }
+            }
+
+            // --------------------------------------------------------- Places
+            SideBarSection {
+                id: _placesSection
+                title: qsTr("Places")
+            }
+
+            Repeater {
+                model: placesModel
+
+                SideBarItem {
+                    readonly property var style: sideBar.placeStyle(model.iconPath)
+                    readonly property string target: model.path ? model.path : model.url
+                    visible: _placesSection.expanded && !model.isDevice
+                    width: _column.width
+                    title: model.name
+                    iconName: style.icon
+                    tileColor: style.color
+                    badge: model.iconPath === "user-trash.svg" ? Places.trashCount : ""
+                    isCurrent: sideBar.samePath(sideBar.currentUrl, target)
+                               || (String(model.url).indexOf("trash:") === 0 && String(sideBar.currentUrl).indexOf("trash:") === 0)
+                    onClicked: sideBar.clicked(target)
+                    onMiddleClicked: sideBar.openInNewTab(target)
+                    onRightClicked: _placeMenu.popupFor(index, target, false)
+                }
+            }
+
+            SideBarItem {
+                visible: _placesSection.expanded && Places.boxesExists
+                width: _column.width
+                title: qsTr("Boxes")
+                iconName: "package-x-generic"
+                tileColor: LingmoUI.Theme.greenColor
+                toolTipText: qsTr("Isolated app boxes")
+                isCurrent: sideBar.samePath(sideBar.currentUrl, Places.boxesPath)
+                onClicked: sideBar.clicked(Places.boxesPath)
+                onMiddleClicked: sideBar.openInNewTab(Places.boxesPath)
+            }
+
+            // --------------------------------------------------------- Drives
+            SideBarSection {
+                id: _drivesSection
+                title: qsTr("Drives")
+            }
+
+            Repeater {
+                model: placesModel
+
+                SideBarItem {
+                    readonly property var style: sideBar.placeStyle(model.iconPath)
+                    readonly property string target: model.path ? model.path : model.url
+                    readonly property var storage: (Places.revision, model.setupNeeded ? ({ valid: false })
+                                                                                          : Places.storageInfo(target))
+                    visible: _drivesSection.expanded && model.isDevice
+                    width: _column.width
+                    title: model.name
+                    iconName: style.icon
+                    tileColor: style.color
+                    usage: storage.valid ? storage.fraction : -1
+                    toolTipText: storage.valid ? storage.usageText : ""
+                    isCurrent: !model.setupNeeded && sideBar.samePath(sideBar.currentUrl, target)
+                    onClicked: {
+                        if (model.setupNeeded)
+                            placesModel.requestSetup(index)
+                        else
+                            sideBar.clicked(target)
+                    }
+                    onMiddleClicked: if (!model.setupNeeded) sideBar.openInNewTab(target)
+                    onRightClicked: _placeMenu.popupFor(index, target, true)
+                }
+            }
         }
     }
 
-    delegate: Item {
-        id: _item
-        width: ListView.view.width - ListView.view.leftMargin - ListView.view.rightMargin
-        height: LingmoUI.Units.fontMetrics.height + LingmoUI.Units.largeSpacing * 1.5
+    // ---------------------------------------------------------------- menus
+    LingmoUI.DesktopMenu {
+        id: _placeMenu
 
-        property bool checked: sideBar.currentIndex === index
-        property color hoveredColor: LingmoUI.Theme.darkMode ? Qt.lighter(LingmoUI.Theme.backgroundColor, 1.1)
-                                                         : Qt.darker(LingmoUI.Theme.backgroundColor, 1.1)
-        MouseArea {
-            id: _mouseArea
-            anchors.fill: parent
-            hoverEnabled: true
-            acceptedButtons: Qt.LeftButton | Qt.RightButton
-            onClicked: {
-                if (mouse.button === Qt.LeftButton) {
-                    if (model.isDevice && model.setupNeeded)
-                        placesModel.requestSetup(index)
-                    else
-                        sideBar.clicked(model.path ? model.path : model.url)
-                } else if (mouse.button === Qt.RightButton) {
-                    _menu.popup()
-                }
+        property int row: -1
+        property string target: ""
+        property bool device: false
+        readonly property var item: row >= 0 ? placesModel.get(row) : ({})
+
+        function popupFor(r, t, d) {
+            row = r
+            target = t
+            device = d
+            popup()
+        }
+
+        MenuItem {
+            text: qsTr("Open")
+            onTriggered: {
+                if (_placeMenu.item.isDevice && _placeMenu.item.setupNeeded)
+                    placesModel.requestSetup(_placeMenu.row)
+                else
+                    sideBar.clicked(_placeMenu.target)
             }
         }
 
-        LingmoUI.DesktopMenu {
-            id: _menu
+        MenuItem {
+            text: qsTr("Open in New Tab")
+            enabled: !_placeMenu.item.setupNeeded
+            onTriggered: sideBar.openInNewTab(_placeMenu.target)
+        }
 
-            MenuItem {
-                text: qsTr("Open")
+        MenuItem {
+            text: qsTr("Open in new window")
+            enabled: !_placeMenu.item.setupNeeded
+            onTriggered: sideBar.openInNewWindow(_placeMenu.target)
+        }
 
-                onTriggered: {
-                    if (model.isDevice && model.setupNeeded)
-                        placesModel.requestSetup(index)
-                    else
-                        sideBar.clicked(model.path ? model.path : model.url)
-                }
-            }
-
-            MenuItem {
-                text: qsTr("Open in new window")
-
-                onTriggered: {
-                    sideBar.openInNewWindow(model.path ? model.path : model.url)
-                }
-            }
-
-            MenuSeparator {
-                Layout.fillWidth: true
-                visible: _ejectMenuItem.visible || _umountMenuItem.visible
-            }
-
-            MenuItem {
-                id: _ejectMenuItem
-                text: qsTr("Eject")
-                visible: model.isDevice &&
-                         !model.setupNeeded &&
-                         model.isOpticalDisc &&
-                         !model.url.toString() === _fm.rootPath()
-
-                onTriggered: {
-                    placesModel.requestEject(index)
-                }
-            }
-
-            MenuItem {
-                id: _umountMenuItem
-                text: qsTr("Unmount")
-                visible: model.isDevice &&
-                         !model.setupNeeded &&
-                         !model.isOpticalDisc &&
-                         !model.url.toString() === _fm.rootPath()
-
-                onTriggered: {
-                    placesModel.requestTeardown(index)
-                }
+        MenuItem {
+            text: (Places.favorites, Places.isFavorite(_placeMenu.target)) ? qsTr("Remove from Favorites") : qsTr("Add to Favorites")
+            visible: !_placeMenu.device && _placeMenu.target.indexOf("trash:") !== 0
+            height: visible ? implicitHeight : 0
+            onTriggered: {
+                if (Places.isFavorite(_placeMenu.target))
+                    Places.removeFavorite(_placeMenu.target)
+                else
+                    Places.addFavorite(_placeMenu.target)
             }
         }
 
-        Rectangle {
-            anchors.fill: parent
-            radius: LingmoUI.Theme.mediumRadius
-            color: _mouseArea.pressed ? Qt.rgba(LingmoUI.Theme.textColor.r,
-                                               LingmoUI.Theme.textColor.g,
-                                               LingmoUI.Theme.textColor.b, LingmoUI.Theme.darkMode ? 0.05 : 0.1) :
-                   _mouseArea.containsMouse && !checked ? Qt.rgba(LingmoUI.Theme.textColor.r,
-                                                                  LingmoUI.Theme.textColor.g,
-                                                                  LingmoUI.Theme.textColor.b, LingmoUI.Theme.darkMode ? 0.1 : 0.05) :
-                                                          "transparent"
-
-            smooth: true
+        MenuItem {
+            text: qsTr("Eject")
+            visible: _placeMenu.device && !_placeMenu.item.setupNeeded && _placeMenu.item.isOpticalDisc
+                     && _placeMenu.target !== _fm.rootPath()
+            height: visible ? implicitHeight : 0
+            onTriggered: placesModel.requestEject(_placeMenu.row)
         }
 
-        RowLayout {
-            anchors.fill: parent
-            anchors.leftMargin: LingmoUI.Units.smallSpacing
-            anchors.rightMargin: LingmoUI.Units.smallSpacing
-            spacing: LingmoUI.Units.smallSpacing
-
-            Image {
-                height: 22
-                width: height
-                sourceSize: Qt.size(22, 22)
-                // source: "qrc:/images/dark/" + model.iconPath
-//                source: "qrc:/images/" + (LingmoUI.Theme.darkMode || checked ? "dark/" : "light/") + model.iconPath
-                source: "qrc:/images/" + model.iconPath
-                Layout.alignment: Qt.AlignVCenter
-                smooth: false
-                antialiasing: true
-
-                layer.enabled: true
-                layer.effect: ColorOverlay {
-                    color: checked ? LingmoUI.Theme.highlightColor : LingmoUI.Theme.textColor
-                }
-            }
-
-            Label {
-                id: _label
-                text: model.name
-                color: checked ? LingmoUI.Theme.highlightColor : LingmoUI.Theme.textColor
-                elide: Text.ElideRight
-                Layout.fillWidth: true
-                Layout.alignment: Qt.AlignVCenter
-            }
+        MenuItem {
+            text: qsTr("Unmount")
+            visible: _placeMenu.device && !_placeMenu.item.setupNeeded && !_placeMenu.item.isOpticalDisc
+                     && _placeMenu.target !== _fm.rootPath()
+            height: visible ? implicitHeight : 0
+            onTriggered: placesModel.requestTeardown(_placeMenu.row)
         }
     }
 
-    function updateSelection(path) {
-        sideBar.currentIndex = -1
+    LingmoUI.DesktopMenu {
+        id: _favMenu
 
-        for (var i = 0; i < sideBar.count; ++i) {
-            if (path === sideBar.model.get(i).path ||
-                    path === sideBar.model.get(i).url) {
-                sideBar.currentIndex = i
-                break
-            }
+        property string path: ""
+        property int row: -1
+
+        function popupFor(p, r) {
+            path = p
+            row = r
+            popup()
+        }
+
+        MenuItem {
+            text: qsTr("Open")
+            onTriggered: sideBar.clicked(_favMenu.path)
+        }
+
+        MenuItem {
+            text: qsTr("Open in New Tab")
+            onTriggered: sideBar.openInNewTab(_favMenu.path)
+        }
+
+        MenuItem {
+            text: qsTr("Open in new window")
+            onTriggered: sideBar.openInNewWindow(_favMenu.path)
+        }
+
+        MenuSeparator {}
+
+        MenuItem {
+            text: qsTr("Move Up")
+            enabled: _favMenu.row > 0
+            onTriggered: Places.moveFavorite(_favMenu.row, _favMenu.row - 1)
+        }
+
+        MenuItem {
+            text: qsTr("Move Down")
+            enabled: _favMenu.row < Places.favorites.length - 1
+            onTriggered: Places.moveFavorite(_favMenu.row, _favMenu.row + 1)
+        }
+
+        MenuItem {
+            text: qsTr("Remove from Favorites")
+            onTriggered: Places.removeFavorite(_favMenu.path)
+        }
+    }
+
+    LingmoUI.DesktopMenu {
+        id: _recentMenu
+
+        property string path: ""
+
+        function popupFor(p) {
+            path = p
+            popup()
+        }
+
+        MenuItem {
+            text: qsTr("Open")
+            onTriggered: sideBar.openFile(_recentMenu.path)
+        }
+
+        MenuItem {
+            text: qsTr("Show in Folder")
+            onTriggered: sideBar.clicked(_recentMenu.path)
         }
     }
 }

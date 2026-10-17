@@ -45,6 +45,33 @@ sudo make install
 
 This project has been licensed by GPLv3.
 
+## Janela
+
+- **Barra de caminho**: botões clicáveis a partir da *Pasta pessoal*; pastas do
+  meio que não cabem viram um menu "…". Clique na parte vazia da barra (ou
+  `Ctrl+L`) para digitar o caminho.
+- **Barra de ferramentas**: voltar/avançar, pesquisa (`Ctrl+F`), ícones/lista
+  (`Ctrl+1`/`Ctrl+2`), ordenação, nova pasta (`Ctrl+Shift+N`) e painel de
+  visualização (`Alt+P`).
+- **Pesquisa**: procura pelo nome em toda a pasta atual e subpastas, numa thread
+  separada, sem indexador (até 2000 resultados; ignora acentos e maiúsculas;
+  pastas ocultas só com "Mostrar arquivos ocultos").
+- **Barra lateral**: Favoritos (arraste uma pasta para lá, ou "Adicionar aos
+  favoritos" no menu de contexto; salvos em `~/.config/lingmoos/lingmo-filemanager-places.conf`),
+  Recentes (`~/.local/share/recently-used.xbel`), Locais (pastas do usuário,
+  Lixeira com o número de itens, Caixas em `~/Boxes`) e Discos com barra de uso.
+- **Abas**: `Ctrl+T`, `Ctrl+W`, `Ctrl+Tab`; clique do meio numa pasta abre em
+  nova aba.
+- **Lista** com colunas Nome, Tamanho, Modificado e Tipo (clique no cabeçalho
+  para ordenar); **ícones** com miniaturas quadradas e zoom (controle deslizante
+  ou `Ctrl`+roda).
+- **Painel de visualização**: imagem, primeira página de PDF, início de arquivos
+  de texto, dados de áudio/vídeo e detalhes (tamanho, datas, permissões).
+
+Opcionais: `kfilemetadata` (duração, dimensões, artista… no painel; detectado
+no `cmake`) e o módulo QML `QtQuick.Pdf` (`qt6-webengine` no Arch) para a página
+do PDF. Sem eles o painel mostra o ícone e os detalhes básicos.
+
 ## Arquivos compactados
 
 O menu de contexto oferece **Extrair aqui**, **Extrair para…** e **Compactar…**
@@ -66,6 +93,9 @@ cmake -S tests -B /tmp/lingmo-archive-tests
 cmake --build /tmp/lingmo-archive-tests
 QT_QPA_PLATFORM=offscreen QT_QPA_PLATFORMTHEME= ctest --test-dir /tmp/lingmo-archive-tests --output-on-failure
 ```
+
+Os mesmos testes cobrem a pesquisa recursiva (`browser-test`) e a barra de
+caminho começando na pasta pessoal.
 
 O teste de integração requer Ark com suporte a ZIP, TAR.GZ e 7z. Verifica
 compactação e extração reais, incluindo nomes com espaços. Sem Ark, essa parte

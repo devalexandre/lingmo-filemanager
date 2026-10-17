@@ -23,6 +23,9 @@ find_package(KF6XmlGui REQUIRED)
 
 find_package(LingmoUI3 REQUIRED)
 
+# Optional: duration, dimensions, artist... in the preview pane
+find_package(KF6FileMetaData QUIET)
+
 qt6_add_dbus_adaptor(DBUS_SOURCES
                      com.lingmo.FileManager.xml
                      application.h Application)
@@ -43,6 +46,7 @@ add_executable(lingmo-filemanager
   model/pathbarmodel.cpp
   model/dirlister.cpp
   model/positioner.cpp
+  model/searchmodel.cpp
 
   cio/cfilejob.cpp
   cio/cfilesizejob.cpp
@@ -65,6 +69,7 @@ add_executable(lingmo-filemanager
   helper/shortcut.cpp
   helper/filelauncher.cpp
   helper/keyboardsearchmanager.cpp
+  helper/placeshelper.cpp
 
   mimetype/mimeappmanager.cpp
   mimetype/xdgdesktopfile.cpp
@@ -97,6 +102,11 @@ target_link_libraries(lingmo-filemanager
 
   LingmoUI3
 )
+
+if(KF6FileMetaData_FOUND)
+  target_link_libraries(lingmo-filemanager PRIVATE KF6::FileMetaData)
+  target_compile_definitions(lingmo-filemanager PRIVATE HAVE_KFILEMETADATA)
+endif()
 
 file(GLOB TS_FILES translations/*.ts)
 foreach(filepath ${TS_FILES})

@@ -36,6 +36,7 @@
 #include <QMessageBox>
 #include "../helper/filelauncher.h"
 #include "../helper/fm.h"
+#include "../helper/placeshelper.h"
 
 #include "../cio/cfilesizejob.h"
 
@@ -231,6 +232,8 @@ QHash<int, QByteArray> FolderModel::staticRoleNames()
     roleNames[ThumbnailRole] = "thumbnail";
     roleNames[ModifiedRole] = "modified";
     roleNames[IsDesktopFileRole] = "desktopFile";
+    roleNames[KindRole] = "kind";
+    roleNames[PathRole] = "path";
     return roleNames;
 }
 
@@ -304,6 +307,10 @@ QVariant FolderModel::data(const QModelIndex &index, int role) const
     case ModifiedRole: {
         return DateHelper::friendlyTime(item.time(KFileItem::ModificationTime));
     }
+    case KindRole:
+        return item.mimeComment();
+    case PathRole:
+        return item.localPath().isEmpty() ? item.url().toString() : item.localPath();
     default:
         break;
     }
@@ -1045,62 +1052,93 @@ void FolderModel::openSelected()
         }
     }
 
-    for (const QUrl &url : urls) {
-        KFileItem item(url);
-        QString mimeType = item.mimetype();
+    for (const QUrl &url : urls)
+        openItemUrl(url);
+}
 
-        // Desktop file.
-        if (mimeType == "application/x-desktop") {
-            FileLauncher::self()->launchApp(url.toLocalFile(), "");
-            continue;
-        }
+void FolderModel::openItemUrl(const QUrl &url)
+{
+    KFileItem item(url);
+    QString mimeType = item.mimetype();
 
-        // AppImages from the internet go to their default app (Lingmo's
-        // lingmo-winrun runs them in an isolated box); only without one are
-        // they made executable and run directly
-        const bool appImage = mimeType == "application/x-iso9660-appimage"
-                           || mimeType == "application/vnd.appimage";
-        if (appImage) {
-            const QString handler = m_mimeAppManager->getDefaultAppByMimeType(item.currentMimeType());
-            if (!handler.isEmpty()) {
-                FileLauncher::self()->launchApp(handler, url.toLocalFile());
-                continue;
-            }
-        }
-
-        // runnable
-        if (mimeType == "application/x-executable" ||
-            mimeType == "application/x-sharedlib" ||
-            appImage) {
-            QFileInfo fileInfo(url.toLocalFile());
-            if (!fileInfo.isExecutable()) {
-                QFile file(url.toLocalFile());
-                file.setPermissions(file.permissions() | QFile::ExeOwner | QFile::ExeUser | QFile::ExeGroup | QFile::ExeOther);
-            }
-
-            FileLauncher::self()->launchExecutable(url.toLocalFile());
-
-            continue;
-        }
-
-        QString defaultAppDesktopFile = m_mimeAppManager->getDefaultAppByMimeType(item.currentMimeType());
-
-        // If no default application is found,
-        // look for the first one of the frequently used applications.
-        if (defaultAppDesktopFile.isEmpty()) {
-            QStringList recommendApps = m_mimeAppManager->getRecommendedAppsByMimeType(item.currentMimeType());
-            if (recommendApps.count() > 0) {
-                defaultAppDesktopFile = recommendApps.first();
-            }
-        }
-
-        if (!defaultAppDesktopFile.isEmpty()) {
-            FileLauncher::self()->launchApp(defaultAppDesktopFile, url.toLocalFile());
-            continue;
-        }
-
-        QDesktopServices::openUrl(url);
+    // Desktop file.
+    if (mimeType == "application/x-desktop") {
+        FileLauncher::self()->launchApp(url.toLocalFile(), "");
+        return;
     }
+
+    // AppImages from the internet go to their default app (Lingmo's
+    // lingmo-winrun runs them in an isolated box); only without one are
+    // they made executable and run directly
+    const bool appImage = mimeType == "application/x-iso9660-appimage"
+                       || mimeType == "application/vnd.appimage";
+    if (appImage) {
+        const QString handler = m_mimeAppManager->getDefaultAppByMimeType(item.currentMimeType());
+        if (!handler.isEmpty()) {
+            FileLauncher::self()->launchApp(handler, url.toLocalFile());
+            return;
+        }
+    }
+
+    // runnable
+    if (mimeType == "application/x-executable" ||
+        mimeType == "application/x-sharedlib" ||
+        appImage) {
+        QFileInfo fileInfo(url.toLocalFile());
+        if (!fileInfo.isExecutable()) {
+            QFile file(url.toLocalFile());
+            file.setPermissions(file.permissions() | QFile::ExeOwner | QFile::ExeUser | QFile::ExeGroup | QFile::ExeOther);
+        }
+
+        FileLauncher::self()->launchExecutable(url.toLocalFile());
+
+        return;
+    }
+
+    QString defaultAppDesktopFile = m_mimeAppManager->getDefaultAppByMimeType(item.currentMimeType());
+
+    // If no default application is found,
+    // look for the first one of the frequently used applications.
+    if (defaultAppDesktopFile.isEmpty()) {
+        QStringList recommendApps = m_mimeAppManager->getRecommendedAppsByMimeType(item.currentMimeType());
+        if (recommendApps.count() > 0) {
+            defaultAppDesktopFile = recommendApps.first();
+        }
+    }
+
+    if (!defaultAppDesktopFile.isEmpty()) {
+        FileLauncher::self()->launchApp(defaultAppDesktopFile, url.toLocalFile());
+        return;
+    }
+
+    QDesktopServices::openUrl(url);
+}
+
+void FolderModel::openPath(const QString &pathOrUrl)
+{
+    const QUrl url = pathOrUrl.startsWith(QLatin1Char('/')) ? QUrl::fromLocalFile(pathOrUrl) : QUrl(pathOrUrl);
+    if (!url.isValid())
+        return;
+    if (!m_isDesktop && KFileItem(url).isDir()) {
+        setUrl(url.toString(QUrl::PreferLocalFile));
+        return;
+    }
+    openItemUrl(url);
+}
+
+QVariantMap FolderModel::selectedItemInfo() const
+{
+    const QModelIndexList indexes = m_selectionModel->selectedIndexes();
+    if (indexes.isEmpty()) {
+        // The folder itself: its item is named "." by KDirLister
+        QVariantMap info = PlacesHelper::describe(rootItem());
+        if (!info.isEmpty()) {
+            info[QStringLiteral("name")] = resolvedUrl().scheme() == QLatin1String("trash")
+                    ? tr("Trash") : PlacesHelper::self()->displayNameForPath(m_url);
+        }
+        return info;
+    }
+    return PlacesHelper::describe(itemForIndex(indexes.first()));
 }
 
 void FolderModel::showOpenWithDialog()
@@ -1390,6 +1428,7 @@ void FolderModel::openContextMenu(QQuickItem *visualParent, Qt::KeyboardModifier
         menu->addAction(m_actionCollection.action("showHidden"));
 
         menu->addSeparator();
+        menu->addAction(m_actionCollection.action("favorite"));
         menu->addAction(m_actionCollection.action("emptyTrash"));
         menu->addAction(m_actionCollection.action("properties"));
     } else {
@@ -1399,7 +1438,9 @@ void FolderModel::openContextMenu(QQuickItem *visualParent, Qt::KeyboardModifier
         menu->addAction(m_actionCollection.action("restore"));
 
         menu->addAction(m_actionCollection.action("open"));
+        menu->addAction(m_actionCollection.action("openInNewTab"));
         menu->addAction(m_actionCollection.action("openInNewWindow"));
+        menu->addAction(m_actionCollection.action("favorite"));
 
         menu->addAction(m_actionCollection.action("openWith"));
         menu->addSeparator();
@@ -1745,7 +1786,7 @@ void FolderModel::updateNeedSelectUrls()
 
 bool FolderModel::isSupportThumbnails(const QString &mimeType) const
 {
-    const QStringList supportsMimetypes = {"image/bmp", "image/png", "image/gif", "image/jpeg", "image/web",
+    const QStringList supportsMimetypes = {"image/bmp", "image/png", "image/gif", "image/jpeg", "image/webp",
                                            /*"application/pdf", "application/rtf", "application/doc", "application/odf",
                                            "audio/mpeg", "video/mp4"*/};
 
@@ -1917,6 +1958,40 @@ void FolderModel::createActions()
     QAction *openInNewWindow = new QAction(tr("Open in new window"), this);
     QObject::connect(openInNewWindow, &QAction::triggered, this, [=] { this->openInNewWindow(); });
 
+    QAction *openInNewTab = new QAction(tr("Open in New Tab"), this);
+    QObject::connect(openInNewTab, &QAction::triggered, this, [this] {
+        for (const QModelIndex &index : m_selectionModel->selectedIndexes()) {
+            const KFileItem item = itemForIndex(index);
+            if (item.isDir())
+                emit openInNewTabRequested(item.url().toString(QUrl::PreferLocalFile));
+        }
+    });
+
+    // Pins the selected folders (or the open folder) to the sidebar, or unpins them
+    QAction *favorite = new QAction(tr("Add to Favorites"), this);
+    QObject::connect(favorite, &QAction::triggered, this, [this] {
+        QStringList paths;
+        const QModelIndexList indexes = m_selectionModel->selectedIndexes();
+        if (indexes.isEmpty()) {
+            paths << rootItem().localPath();
+        } else {
+            for (const QModelIndex &index : indexes) {
+                const KFileItem item = itemForIndex(index);
+                if (item.isDir() && !item.localPath().isEmpty())
+                    paths << item.localPath();
+            }
+        }
+        bool allFavorite = !paths.isEmpty();
+        for (const QString &path : paths)
+            allFavorite &= PlacesHelper::self()->isFavorite(path);
+        for (const QString &path : paths) {
+            if (allFavorite)
+                PlacesHelper::self()->removeFavorite(path);
+            else
+                PlacesHelper::self()->addFavorite(path);
+        }
+    });
+
     const QList<QPair<QString, QString>> archiveActions = {
         {"extractHere", tr("Extract Here")},
         {"extractTo", tr("Extract To…")},
@@ -1953,6 +2028,8 @@ void FolderModel::createActions()
     m_actionCollection.addAction(QStringLiteral("restore"), restore);
     m_actionCollection.addAction(QStringLiteral("showHidden"), showHidden);
     m_actionCollection.addAction(QStringLiteral("openInNewWindow"), openInNewWindow);
+    m_actionCollection.addAction(QStringLiteral("openInNewTab"), openInNewTab);
+    m_actionCollection.addAction(QStringLiteral("favorite"), favorite);
 }
 
 void FolderModel::updateActions()
@@ -2090,6 +2167,23 @@ void FolderModel::updateActions()
 
     if (QAction *openInNewWindow = m_actionCollection.action("openInNewWindow")) {
         openInNewWindow->setVisible(hasDir && !isTrash);
+    }
+
+    if (QAction *openInNewTab = m_actionCollection.action("openInNewTab")) {
+        openInNewTab->setVisible(hasDir && !isTrash && !m_isDesktop);
+    }
+
+    if (QAction *favorite = m_actionCollection.action("favorite")) {
+        bool anyDir = false;
+        bool allFavorite = true;
+        for (const KFileItem &item : std::as_const(items)) {
+            if (item.isDir() && !item.localPath().isEmpty()) {
+                anyDir = true;
+                allFavorite &= PlacesHelper::self()->isFavorite(item.localPath());
+            }
+        }
+        favorite->setVisible(anyDir && !isTrash && !m_isDesktop);
+        favorite->setText(anyDir && allFavorite ? tr("Remove from Favorites") : tr("Add to Favorites"));
     }
 }
 
