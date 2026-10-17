@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 LingmoOS Team.
+ * Copyright (C) 2021 - 2026 LingmoOS Team.
  *
  * Author:     Reion Wong <reionwong@gmail.com>
  *
@@ -20,24 +20,40 @@
 #ifndef THUMBNAILCACHE_H
 #define THUMBNAILCACHE_H
 
-#include <QObject>
+#include <QImage>
+#include <QString>
 
-class QImageReader;
-class ThumbnailCache : public QObject
+// Thumbnails stored as the freedesktop.org Thumbnail Managing Standard says:
+// $XDG_CACHE_HOME/thumbnails/<flavor>/<md5 of the file URI>.png with the
+// Thumb::URI and Thumb::MTime text keys. Lingmo Photos uses the same rules
+// (lingmo-photos/src/thumbnailcache.cpp), so both apps — and GNOME/KDE ones —
+// share one cache.
+namespace Thumbnails
 {
-    Q_OBJECT
+// 128 -> normal, 256 -> large, 512 -> x-large, 1024 -> xx-large
+QString flavorFor(int size);
+int flavorSize(const QString &flavor);
+QString cacheRoot();
+QString uriFor(const QString &path);
+QString fileNameFor(const QString &path);          // md5(uri) + ".png"
+QString pathFor(const QString &path, int size);    // where the thumbnail goes
+QString failPathFor(const QString &path);          // fail/lingmo-filemanager/...
 
-public:
-    static ThumbnailCache *self();
-    explicit ThumbnailCache(QObject *parent = nullptr);
+// True when thumbPath exists and was made from the current version of source
+bool isValid(const QString &thumbPath, const QString &source);
 
-    QString requestThumbnail(const QString &filePath, const QSize &requestedSize);
-    QString generateThumbnail(const QString &source, const QString &target, const QSize &requestedSize);
-    QString writeCacheFile(const QString &path, const QImage &image);
+// Image types Qt can decode (SVGs are shown as they are, not thumbnailed)
+bool canThumbnail(const QString &mimeType);
 
-private:
-    // thumbnail cache folder
-    QString m_thumbnailsDir;
-};
+// "image://thumbnailer/<id>" for a local file: the path percent-encoded, so
+// '#', '?' and '%' in names survive the image URL. The file's mtime goes in
+// the query: a changed file gets a new URL, so views ask again.
+QString imageUrlFor(const QString &path, qint64 mtime = -1);
+QString pathFromImageId(const QString &id);
+
+// Returns a valid thumbnail (reading the cache or creating it); null on failure.
+// size is the wanted bounding box in device pixels; the matching flavor is used.
+QImage load(const QString &source, int size);
+}
 
 #endif // THUMBNAILCACHE_H

@@ -207,6 +207,13 @@ public:
     Q_INVOKABLE void openPath(const QString &pathOrUrl);
     // Preview pane: the first selected item, or the folder itself
     Q_INVOKABLE QVariantMap selectedItemInfo() const;
+
+    // Row of the item with this path or URL, -1 if it isn't listed (yet)
+    Q_INVOKABLE int rowForPath(const QString &pathOrUrl) const;
+    // Selects (and scrolls to) the item with this path or URL once the folder
+    // is listed (now, if it already is). An empty path selects the first item.
+    // The column view uses it to keep its place when moving between folders.
+    Q_INVOKABLE void selectWhenListed(const QString &pathOrUrl);
     Q_INVOKABLE void showOpenWithDialog();
     Q_INVOKABLE void deleteSelected();
     Q_INVOKABLE void moveSelectedToTrash();
@@ -345,6 +352,10 @@ private:
     CFileSizeJob *m_sizeJob;
 
     int m_currentIndex;
+    // selectWhenListed(): null when nothing is waiting
+    QString m_pendingSelect;
+    bool m_hasPendingSelect = false;
+    void applyPendingSelect();
 
     QTimer *m_updateNeedSelectTimer;
 };

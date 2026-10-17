@@ -125,6 +125,20 @@
     </message>
 </context>
 <context>
+    <name>FolderColumnList</name>
+    <message>
+        <source>Empty folder</source>
+        <translation>Pasta vazia</translation>
+    </message>
+</context>
+<context>
+    <name>FolderColumnsView</name>
+    <message>
+        <source>Empty folder</source>
+        <translation>Pasta vazia</translation>
+    </message>
+</context>
+<context>
     <name>FolderListView</name>
     <message>
         <location filename="../qml/FolderListView.qml" line="+96"/>
@@ -1033,6 +1047,14 @@
         <location line="+7"/>
         <source>Preview Pane (Alt+P)</source>
         <translation>Painel de visualização (Alt+P)</translation>
+    </message>
+    <message>
+        <source>Columns</source>
+        <translation>Colunas</translation>
+    </message>
+    <message>
+        <source>Columns (Ctrl+3)</source>
+        <translation>Colunas (Ctrl+3)</translation>
     </message>
 </context>
 </TS>

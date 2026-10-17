@@ -9,6 +9,6 @@ Comment=Lingmo File Manager
 Comment[pt_BR]=Gerenciador de arquivos do Lingmo
 Exec=lingmo-filemanager %u
 MimeType=inode/directory;
-Icon=file-system-manager
+Icon=lingmo-filemanager
 Categories=Qt;System;FileTools;FileManager;
 StartupNotify=true

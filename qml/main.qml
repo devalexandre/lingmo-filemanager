@@ -155,6 +155,7 @@ LingmoUI.Window {
     Shortcut { sequences: ["Ctrl+Shift+Tab", "Ctrl+PgUp"]; onActivated: root.currentTab = (root.currentTab + _tabsModel.count - 1) % _tabsModel.count }
     Shortcut { sequence: "Ctrl+1"; onActivated: settings.viewMethod = 1 }
     Shortcut { sequence: "Ctrl+2"; onActivated: settings.viewMethod = 0 }
+    Shortcut { sequence: "Ctrl+3"; onActivated: settings.viewMethod = 2 }
     Shortcut { sequence: "Ctrl+Shift+N"; onActivated: if (currentPage) currentPage.model.newFolder() }
     Shortcut { sequence: "Alt+P"; onActivated: settings.showPreview = !settings.showPreview }
 
@@ -241,6 +242,13 @@ LingmoUI.Window {
                 checkable: true
                 checked: settings.viewMethod === 0
                 onTriggered: settings.viewMethod = 0
+            }
+
+            Platform.MenuItem {
+                text: qsTr("Columns")
+                checkable: true
+                checked: settings.viewMethod === 2
+                onTriggered: settings.viewMethod = 2
             }
 
             Platform.MenuSeparator {}
@@ -363,12 +371,15 @@ LingmoUI.Window {
 
             SegmentedControl {
                 Layout.leftMargin: LingmoUI.Units.smallSpacing
+                // Segment order: icons, list, columns; settings.viewMethod: 1, 0, 2
+                readonly property var methods: [1, 0, 2]
                 model: [
                     { icon: "view-grid", text: qsTr("Icons (Ctrl+1)") },
-                    { icon: "view-list", text: qsTr("List (Ctrl+2)") }
+                    { icon: "view-list", text: qsTr("List (Ctrl+2)") },
+                    { icon: "view-column", text: qsTr("Columns (Ctrl+3)") }
                 ]
-                currentIndex: settings.viewMethod === 1 ? 0 : 1
-                onActivated: function(index) { settings.viewMethod = index === 0 ? 1 : 0 }
+                currentIndex: Math.max(0, methods.indexOf(settings.viewMethod))
+                onActivated: function(index) { settings.viewMethod = methods[index] }
             }
 
             IconButton {

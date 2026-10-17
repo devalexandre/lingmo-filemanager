@@ -63,56 +63,75 @@ ListView {
 
     property variant cachedRectangleSelection: null
 
+    // The column view shows a bare list: no column headers, and it opens
+    // folders itself (openRequested) to keep the columns to their left
+    property bool showHeader: true
+    property bool customOpen: false
+
     signal keyPress(var event)
     signal sortRequested(int mode)
     signal openInNewTabRequested(string url)
+    signal openRequested()
+
+    function openSelected() {
+        if (control.customOpen)
+            control.openRequested()
+        else
+            dirModel.openSelected()
+    }
 
     headerPositioning: ListView.OverlayHeader
-    header: Rectangle {
-        z: 3
-        width: control.width - control.leftMargin - control.rightMargin
-        height: LingmoUI.Units.fontMetrics.height + LingmoUI.Units.largeSpacing
-        color: LingmoUI.Theme.secondBackgroundColor
+    header: control.showHeader ? _headerComponent : null
+
+    Component {
+        id: _headerComponent
 
         Rectangle {
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.bottom: parent.bottom
-            height: 1
-            color: Qt.rgba(LingmoUI.Theme.textColor.r, LingmoUI.Theme.textColor.g,
-                           LingmoUI.Theme.textColor.b, 0.08)
-        }
+            z: 3
+            width: control.width - control.leftMargin - control.rightMargin
+            height: LingmoUI.Units.fontMetrics.height + LingmoUI.Units.largeSpacing
+            color: LingmoUI.Theme.secondBackgroundColor
 
-        RowLayout {
-            anchors.fill: parent
-            anchors.leftMargin: LingmoUI.Units.smallSpacing
-            anchors.rightMargin: LingmoUI.Units.smallSpacing
-            anchors.bottomMargin: 1
-            spacing: LingmoUI.Units.smallSpacing
+            Rectangle {
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.bottom: parent.bottom
+                height: 1
+                color: Qt.rgba(LingmoUI.Theme.textColor.r, LingmoUI.Theme.textColor.g,
+                               LingmoUI.Theme.textColor.b, 0.08)
+            }
 
-            ListHeaderButton {
-                Layout.fillWidth: true
-                Layout.leftMargin: control.listIconSize
-                text: qsTr("Name")
-                mode: 0
-            }
-            ListHeaderButton {
-                Layout.preferredWidth: control.sizeColumnWidth
-                text: qsTr("Size")
-                mode: 1
-                alignRight: true
-            }
-            ListHeaderButton {
-                Layout.preferredWidth: control.modifiedColumnWidth
-                Layout.leftMargin: LingmoUI.Units.largeSpacing
-                text: qsTr("Modified")
-                mode: 2
-            }
-            ListHeaderButton {
-                visible: control.showKindColumn
-                Layout.preferredWidth: control.kindColumnWidth
-                text: qsTr("Kind")
-                mode: 6
+            RowLayout {
+                anchors.fill: parent
+                anchors.leftMargin: LingmoUI.Units.smallSpacing
+                anchors.rightMargin: LingmoUI.Units.smallSpacing
+                anchors.bottomMargin: 1
+                spacing: LingmoUI.Units.smallSpacing
+
+                ListHeaderButton {
+                    Layout.fillWidth: true
+                    Layout.leftMargin: control.listIconSize
+                    text: qsTr("Name")
+                    mode: 0
+                }
+                ListHeaderButton {
+                    Layout.preferredWidth: control.sizeColumnWidth
+                    text: qsTr("Size")
+                    mode: 1
+                    alignRight: true
+                }
+                ListHeaderButton {
+                    Layout.preferredWidth: control.modifiedColumnWidth
+                    Layout.leftMargin: LingmoUI.Units.largeSpacing
+                    text: qsTr("Modified")
+                    mode: 2
+                }
+                ListHeaderButton {
+                    visible: control.showKindColumn
+                    Layout.preferredWidth: control.kindColumnWidth
+                    text: qsTr("Kind")
+                    mode: 6
+                }
             }
         }
     }
@@ -335,7 +354,7 @@ ListView {
 
         onDoubleClicked: {
             if (mouse.button === Qt.LeftButton && control.pressedItem)
-                dirModel.openSelected()
+                control.openSelected()
         }
 
         onPressed: {

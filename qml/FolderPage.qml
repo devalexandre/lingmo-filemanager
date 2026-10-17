@@ -146,7 +146,8 @@ Item {
 
     FM.ItemViewAdapter {
         id: viewAdapter
-        adapterView: _viewLoader.item
+        // The column view: its open folder's list
+        adapterView: _viewLoader.item && _viewLoader.item.activeView ? _viewLoader.item.activeView : _viewLoader.item
         adapterModel: _viewLoader.item && _viewLoader.item.positioner ? _viewLoader.item.positioner : dirModel
         adapterIconSize: 40
         adapterVisibleArea: _viewLoader.item ? Qt.rect(_viewLoader.item.contentX, _viewLoader.item.contentY,
@@ -175,7 +176,8 @@ Item {
                     asynchronous: true
                     sourceComponent: switch (settings.viewMethod) {
                                      case 0: return _listViewComponent
-                                     case 1: return _gridViewComponent
+                                     case 2: return _columnsViewComponent
+                                     default: return _gridViewComponent
                                      }
 
                     onSourceComponentChanged: {
@@ -185,12 +187,12 @@ Item {
                         _viewLoader.item.forceActiveFocus()
 
                         // ShortCut
-                        shortCut.install(_viewLoader.item)
+                        shortCut.install(folderPage.shortcutTarget())
                     }
 
                     onLoaded: {
                         _viewLoader.item.forceActiveFocus()
-                        shortCut.install(_viewLoader.item)
+                        shortCut.install(folderPage.shortcutTarget())
                     }
                 }
 
@@ -216,7 +218,7 @@ Item {
                     visible: !folderPage.searchActive && !folderPage.isTrash
                              && (dirModel.status === FM.FolderModel.Ready || dirModel.status === FM.FolderModel.Canceled)
                              && _viewLoader.status === Loader.Ready
-                             && _viewLoader.item.count === 0
+                             && _viewLoader.item.count === 0 && !_viewLoader.item.handlesEmptyState
                     iconName: "folder-open"
                     title: qsTr("Empty folder")
                     text: qsTr("Drag files here or create a new folder.")
@@ -227,7 +229,7 @@ Item {
                     visible: !folderPage.searchActive && folderPage.isTrash && FM.Places.trashCount === 0
                              && (dirModel.status === FM.FolderModel.Ready || dirModel.status === FM.FolderModel.Canceled)
                              && _viewLoader.status === Loader.Ready
-                             && _viewLoader.item.count === 0
+                             && _viewLoader.item.count === 0 && !_viewLoader.item.handlesEmptyState
                     iconName: "user-trash"
                     title: qsTr("Trash is empty")
                     text: qsTr("Items you delete stay here until you empty the trash.")
@@ -414,6 +416,12 @@ Item {
         _viewLoader.item.rename()
     }
 
+    // Where the keyboard shortcuts listen: the view, or the column view's open folder
+    function shortcutTarget() {
+        var view = _viewLoader.item
+        return view && view.activeView ? view.activeView : view
+    }
+
     Component.onCompleted: {
         dirModel.requestRename.connect(rename)
     }
@@ -479,6 +487,14 @@ Item {
     }
 
     Component {
+        id: _columnsViewComponent
+
+        FolderColumnsView {
+            onOpenInNewTabRequested: function(url) { folderPage.openInNewTab(url) }
+        }
+    }
+
+    Component {
         id: rubberBandObject
 
         FM.RubberBand {
@@ -518,7 +534,11 @@ Item {
         id: shortCut
 
         onOpen: {
-            dirModel.openSelected()
+            // The column view opens folders in its next column
+            if (folderPage.currentView && folderPage.currentView.openSelected)
+                folderPage.currentView.openSelected()
+            else
+                dirModel.openSelected()
         }
         onCopy: {
             dirModel.copy()

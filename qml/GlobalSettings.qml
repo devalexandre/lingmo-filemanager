@@ -21,7 +21,7 @@ import QtQuick 2.12
 import Qt.labs.settings 1.0
 
 Settings {
-    property int viewMethod: 1          // controls display mode: list or grid
+    property int viewMethod: 1          // 0 list, 1 icons (grid), 2 columns
 
     // Port to C++
     // property bool showHiddenFiles: false

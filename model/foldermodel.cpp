@@ -24,6 +24,7 @@
  ***************************************************************************/
 
 #include "foldermodel.h"
+#include "../thumbnailer/thumbnailcache.h"
 #include "dirlister.h"
 #include "window.h"
 
@@ -135,6 +136,7 @@ FolderModel::FolderModel(QObject *parent)
     QObject::connect(m_dirLister, myCompletedSignal, this, [this] {
         setStatus(Status::Ready);
         emit listingCompleted();
+        applyPendingSelect();
     });
 
     void (KCoreDirLister::*myCanceledSignal)() = &KCoreDirLister::canceled;
@@ -296,9 +298,10 @@ QVariant FolderModel::data(const QModelIndex &index, int role) const
                 return item.url();
             }
 
-            // Support
+            // Shared freedesktop.org thumbnail cache (thumbnailer/thumbnailcache.h)
             if (isSupportThumbnails(item.mimetype())) {
-                return "image://thumbnailer/" + item.url().toString();
+                return Thumbnails::imageUrlFor(item.localPath(),
+                                               item.time(KFileItem::ModificationTime).toSecsSinceEpoch());
             }
         }
 
@@ -406,6 +409,7 @@ void FolderModel::setUrl(const QString &url)
     }
 
     setStatus(Status::Listing);
+    m_hasPendingSelect = false;
 
     if (m_pathHistory.isEmpty() || m_pathHistory.last() != resolvedNewUrl)
         m_pathHistory.append(resolvedNewUrl);
@@ -1141,6 +1145,37 @@ QVariantMap FolderModel::selectedItemInfo() const
     return PlacesHelper::describe(itemForIndex(indexes.first()));
 }
 
+int FolderModel::rowForPath(const QString &pathOrUrl) const
+{
+    if (pathOrUrl.isEmpty())
+        return -1;
+    const QUrl url = pathOrUrl.startsWith(QLatin1Char('/')) ? QUrl::fromLocalFile(pathOrUrl) : QUrl(pathOrUrl);
+    const QModelIndex index = indexForUrl(url);
+    return index.isValid() ? mapFromSource(index).row() : -1;
+}
+
+void FolderModel::selectWhenListed(const QString &pathOrUrl)
+{
+    m_pendingSelect = pathOrUrl;
+    m_hasPendingSelect = true;
+    if (m_status == Status::Ready)
+        applyPendingSelect();
+}
+
+void FolderModel::applyPendingSelect()
+{
+    if (!m_hasPendingSelect)
+        return;
+    m_hasPendingSelect = false;
+
+    const int row = m_pendingSelect.isEmpty() ? (rowCount() > 0 ? 0 : -1) : rowForPath(m_pendingSelect);
+    if (row < 0)
+        return;
+    clearSelection();
+    setSelected(row);
+    emit scrollToItem(row);
+}
+
 void FolderModel::showOpenWithDialog()
 {
     if (!m_selectionModel->hasSelection())
@@ -1786,14 +1821,7 @@ void FolderModel::updateNeedSelectUrls()
 
 bool FolderModel::isSupportThumbnails(const QString &mimeType) const
 {
-    const QStringList supportsMimetypes = {"image/bmp", "image/png", "image/gif", "image/jpeg", "image/webp",
-                                           /*"application/pdf", "application/rtf", "application/doc", "application/odf",
-                                           "audio/mpeg", "video/mp4"*/};
-
-    if (supportsMimetypes.contains(mimeType))
-        return true;
-
-    return false;
+    return Thumbnails::canThumbnail(mimeType);
 }
 
 bool FolderModel::filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const

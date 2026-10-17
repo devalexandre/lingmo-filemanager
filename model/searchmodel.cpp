@@ -8,6 +8,7 @@
  */
 
 #include "searchmodel.h"
+#include "../thumbnailer/thumbnailcache.h"
 #include "../helper/datehelper.h"
 
 #include <QDirIterator>
@@ -272,12 +273,10 @@ QVariant SearchModel::data(const QModelIndex &index, int role) const
     case KindRole:
         return QMimeDatabase().mimeTypeForName(r.mimeType).comment();
     case ThumbnailRole: {
-        static const QStringList thumbs = {QStringLiteral("image/bmp"), QStringLiteral("image/png"), QStringLiteral("image/gif"),
-                                           QStringLiteral("image/jpeg"), QStringLiteral("image/webp")};
-        if (thumbs.contains(r.mimeType))
-            return QStringLiteral("image://thumbnailer/") + QUrl::fromLocalFile(r.path).toString();
         if (r.mimeType == QLatin1String("image/svg+xml"))
             return QUrl::fromLocalFile(r.path);
+        if (!r.isDir && Thumbnails::canThumbnail(r.mimeType))
+            return Thumbnails::imageUrlFor(r.path, r.modified.toSecsSinceEpoch());
         return QVariant();
     }
     default:

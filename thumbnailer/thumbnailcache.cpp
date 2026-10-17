@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2021 LingmoOS Team.
+ * Copyright (C) 2021 - 2026 LingmoOS Team.
  *
- * Author:     Reion Wong <reionwong@gmail.com>
+ * Author:     devalexandre <alexandre@dev2learn.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,154 +17,212 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
 #include "thumbnailcache.h"
+
 #include <QCryptographicHash>
-#include <QStandardPaths>
-#include <QImageReader>
-#include <QFileInfo>
-#include <QDateTime>
-#include <QImage>
-#include <QSize>
-#include <QFile>
 #include <QDir>
+#include <QFileInfo>
+#include <QImageReader>
+#include <QImageWriter>
+#include <QMimeDatabase>
+#include <QSet>
+#include <QSaveFile>
+#include <QStandardPaths>
 #include <QUrl>
 
-static ThumbnailCache *SELF = nullptr;
+namespace {
 
-ThumbnailCache *ThumbnailCache::self()
+// Failures are kept per application, as the spec asks
+const QString FailFolder = QStringLiteral("fail/lingmo-filemanager");
+
+bool makePrivateDir(const QString &dir)
 {
-    if (!SELF) {
-        SELF = new ThumbnailCache;
-    }
-
-    return SELF;
+    if (QFileInfo::exists(dir))
+        return true;
+    if (!QDir().mkpath(dir))
+        return false;
+    // The spec wants the thumbnail folders readable by the owner only
+    QFile::setPermissions(dir, QFile::ReadOwner | QFile::WriteOwner | QFile::ExeOwner);
+    QFile::setPermissions(QFileInfo(dir).absolutePath(),
+                          QFile::ReadOwner | QFile::WriteOwner | QFile::ExeOwner);
+    return true;
 }
 
-ThumbnailCache::ThumbnailCache(QObject *parent)
-    : QObject(parent)
+bool savePng(const QImage &image, const QString &target)
 {
-    m_thumbnailsDir = QStandardPaths::writableLocation(QStandardPaths::GenericCacheLocation) + QLatin1String("/thumbnails/");
-
-    QDir dir(m_thumbnailsDir);
-    if (!dir.exists())
-        dir.mkdir(m_thumbnailsDir);
+    if (!makePrivateDir(QFileInfo(target).absolutePath()))
+        return false;
+    // Written to a temporary file and renamed: other readers never see half a PNG
+    QSaveFile file(target);
+    if (!file.open(QIODevice::WriteOnly))
+        return false;
+    QImageWriter writer(&file, "png");
+    if (!writer.write(image)) {
+        file.cancelWriting();
+        return false;
+    }
+    if (!file.commit())
+        return false;
+    QFile::setPermissions(target, QFile::ReadOwner | QFile::WriteOwner);
+    return true;
 }
 
-QString ThumbnailCache::requestThumbnail(const QString &filePath, const QSize &requestedSize)
+QString mtimeOf(const QFileInfo &info)
 {
-    QString path(filePath);
-    if (path.startsWith("file://")) {
-        path = path.mid(7);
-    }
-
-    if (!QFile::exists(path)) {
-        return QString();
-    }
-
-    int width = requestedSize.width();
-    int height = requestedSize.height();
-    int cacheSize = 0;
-
-    // 首先需要找到目录
-    if (width <= 128 && height <= 128)
-        cacheSize = 128;
-    else if (width <= 256 && height <= 256)
-        cacheSize = 256;
-    else
-        cacheSize = 512;
-
-    struct CachePool {
-        QString path;
-        int minSize;
-    };
-
-    const static auto pools = {
-        CachePool{ QStringLiteral("/normal/"), 128 },
-        CachePool{ QStringLiteral("/large/"), 256 },
-        CachePool{ QStringLiteral("/x-large/"), 512 },
-        CachePool{ QStringLiteral("/xx-large/"), 1024 },
-    };
-
-    QString thumbDir;
-    int wants = /*devicePixelRatio **/ cacheSize;
-    for (const auto &p : pools) {
-        if (p.minSize < wants) {
-            continue;
-        } else {
-            thumbDir = p.path;
-            break;
-        }
-    }
-
-    // 尺寸文件夹
-    QString sizeDir = m_thumbnailsDir + thumbDir;
-
-    // 不存在需要创建路径
-    if (!QDir(sizeDir).exists()) {
-        if (QDir().mkpath(sizeDir)) {
-            QFile f(sizeDir);
-            f.setPermissions(QFile::ReadUser | QFile::WriteUser | QFile::ExeUser); // 0700
-        }
-    }
-
-    // Md5
-    QByteArray origName;
-    const QFileInfo info(path);
-    const QString canonicalPath = info.canonicalFilePath();
-    origName = QUrl::fromLocalFile(canonicalPath).toEncoded(QUrl::RemovePassword | QUrl::FullyEncoded);
-
-    if (origName.isEmpty()) {
-        return QString();
-    }
-
-    QCryptographicHash md5(QCryptographicHash::Md5);
-    md5.addData(origName);
-    // Image size
-    md5.addData(QString::number(width).toStdString().c_str());
-    md5.addData(QString::number(height).toStdString().c_str());
-    // Time
-    md5.addData(QString::number(info.lastModified().toSecsSinceEpoch()).toStdString().c_str());
-
-    QString thumbnailsName = QString::fromLatin1(md5.result().toHex()) + QLatin1String(".png");
-    QString thumbnailsPath = m_thumbnailsDir + thumbDir + thumbnailsName;
-
-    if (!QFile::exists(thumbnailsPath)) {
-        return generateThumbnail(path, thumbnailsPath, requestedSize);
-    } else {
-        return thumbnailsPath;
-    }
+    return QString::number(info.lastModified().toSecsSinceEpoch());
 }
 
-QString ThumbnailCache::generateThumbnail(const QString &source, const QString &target, const QSize &requestedSize)
+} // namespace
+
+QString Thumbnails::flavorFor(int size)
 {
+    if (size <= 128)
+        return QStringLiteral("normal");
+    if (size <= 256)
+        return QStringLiteral("large");
+    if (size <= 512)
+        return QStringLiteral("x-large");
+    return QStringLiteral("xx-large");
+}
+
+int Thumbnails::flavorSize(const QString &flavor)
+{
+    if (flavor == QLatin1String("normal"))
+        return 128;
+    if (flavor == QLatin1String("large"))
+        return 256;
+    if (flavor == QLatin1String("x-large"))
+        return 512;
+    return 1024;
+}
+
+QString Thumbnails::cacheRoot()
+{
+    return QStandardPaths::writableLocation(QStandardPaths::GenericCacheLocation)
+        + QStringLiteral("/thumbnails");
+}
+
+QString Thumbnails::uriFor(const QString &path)
+{
+    // file:///home/me/My%20Photo.jpg — RFC 2396 escaping, as the spec asks
+    return QString::fromLatin1(QUrl::fromLocalFile(QFileInfo(path).absoluteFilePath()).toEncoded());
+}
+
+QString Thumbnails::fileNameFor(const QString &path)
+{
+    const QByteArray md5 = QCryptographicHash::hash(uriFor(path).toUtf8(), QCryptographicHash::Md5);
+    return QString::fromLatin1(md5.toHex()) + QStringLiteral(".png");
+}
+
+QString Thumbnails::pathFor(const QString &path, int size)
+{
+    return cacheRoot() + QLatin1Char('/') + flavorFor(size) + QLatin1Char('/') + fileNameFor(path);
+}
+
+QString Thumbnails::failPathFor(const QString &path)
+{
+    return cacheRoot() + QLatin1Char('/') + FailFolder + QLatin1Char('/') + fileNameFor(path);
+}
+
+namespace {
+// QImageReader::text() can't return keys with ':' in them (it parses
+// "key: value" pairs), so the whole thumbnail is read; they're small.
+bool matches(const QImage &thumb, const QString &source)
+{
+    return !thumb.isNull()
+        && thumb.text(QStringLiteral("Thumb::MTime")) == mtimeOf(QFileInfo(source))
+        && thumb.text(QStringLiteral("Thumb::URI")) == Thumbnails::uriFor(source);
+}
+}
+
+bool Thumbnails::isValid(const QString &thumbPath, const QString &source)
+{
+    return QFileInfo::exists(thumbPath) && matches(QImage(thumbPath, "png"), source);
+}
+
+QImage Thumbnails::load(const QString &source, int size)
+{
+    const QFileInfo info(source);
+    if (!info.isFile())
+        return {};
+    const int flavor = flavorSize(flavorFor(size));
+    const QString cached = pathFor(source, size);
+    // Files inside the thumbnail folders never get thumbnails of their own
+    const bool insideCache = info.absoluteFilePath().startsWith(cacheRoot() + QLatin1Char('/'));
+
+    if (!insideCache && QFileInfo::exists(cached)) {
+        const QImage image(cached, "png");
+        if (matches(image, source))
+            return image;
+    }
+    const QString failed = failPathFor(source);
+    if (!insideCache && isValid(failed, source))
+        return {};
+
     QImageReader reader(source);
-    if (reader.canRead()) {
-        // Quality in the jpeg reader is binary. >= 50: high quality, < 50 fast
-        reader.setQuality(49);
-
-        reader.setScaledSize(reader.size().scaled(requestedSize.width(),
-                                                  requestedSize.height(), Qt::KeepAspectRatio));
-        reader.setAutoTransform(true);
-
-        QImage image(reader.read());
-        return writeCacheFile(target, image);
+    reader.setAutoTransform(true);
+    reader.setQuality(80);
+    // The box is square, so the EXIF rotation doesn't change the fitted size.
+    // Decoders like JPEG scale while decoding: far faster than a full read.
+    const QSize original = reader.size();
+    if (original.isValid() && (original.width() > flavor || original.height() > flavor)
+        && reader.supportsOption(QImageIOHandler::ScaledSize))
+        reader.setScaledSize(original.scaled(flavor, flavor, Qt::KeepAspectRatio).expandedTo(QSize(1, 1)));
+    QImage image = reader.read();
+    if (image.isNull()) {
+        if (!insideCache) {
+            QImage marker(1, 1, QImage::Format_ARGB32);
+            marker.fill(Qt::transparent);
+            marker.setText(QStringLiteral("Thumb::URI"), uriFor(source));
+            marker.setText(QStringLiteral("Thumb::MTime"), mtimeOf(info));
+            savePng(marker, failed);
+        }
+        return {};
     }
+    if (image.width() > flavor || image.height() > flavor)
+        image = image.scaled(flavor, flavor, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+    if (image.format() != QImage::Format_ARGB32 && image.format() != QImage::Format_RGB32)
+        image = image.convertToFormat(image.hasAlphaChannel() ? QImage::Format_ARGB32 : QImage::Format_RGB32);
 
-    return QString();
+    if (!insideCache) {
+        QImage stored = image;
+        stored.setText(QStringLiteral("Thumb::URI"), uriFor(source));
+        stored.setText(QStringLiteral("Thumb::MTime"), mtimeOf(info));
+        stored.setText(QStringLiteral("Thumb::Size"), QString::number(info.size()));
+        stored.setText(QStringLiteral("Software"), QStringLiteral("Lingmo File Manager"));
+        savePng(stored, cached);
+    }
+    return image;
 }
 
-QString ThumbnailCache::writeCacheFile(const QString &path, const QImage &image)
+bool Thumbnails::canThumbnail(const QString &mimeType)
 {
-    const QString thumbnailPath(path);
-    QFile thumbnailFile(path);
+    static const QSet<QString> types = [] {
+        QSet<QString> set;
+        for (const QByteArray &type : QImageReader::supportedMimeTypes())
+            set.insert(QString::fromLatin1(type));
+        set.remove(QStringLiteral("image/svg+xml"));
+        set.remove(QStringLiteral("image/svg+xml-compressed"));
+        return set;
+    }();
+    return types.contains(mimeType) || types.contains(QMimeDatabase().mimeTypeForName(mimeType).name());
+}
 
-    if (!thumbnailFile.open(QIODevice::WriteOnly)) {
-        return QString();
-    }
+QString Thumbnails::imageUrlFor(const QString &path, qint64 mtime)
+{
+    QString url = QStringLiteral("image://thumbnailer/") + QString::fromLatin1(QUrl::toPercentEncoding(path));
+    if (mtime >= 0)
+        url += QLatin1Char('?') + QString::number(mtime);
+    return url;
+}
 
-    image.save(&thumbnailFile, image.hasAlphaChannel() ? "PNG" : "JPG");
-    thumbnailFile.flush();
-    thumbnailFile.close();
-
-    return thumbnailPath;
+QString Thumbnails::pathFromImageId(const QString &id)
+{
+    // Older callers passed a file:// URL
+    if (id.startsWith(QLatin1String("file:")))
+        return QUrl(id).toLocalFile();
+    // A '?' in the name is encoded: a literal one starts the mtime query
+    const int query = id.indexOf(QLatin1Char('?'));
+    return QUrl::fromPercentEncoding((query >= 0 ? id.left(query) : id).toUtf8());
 }

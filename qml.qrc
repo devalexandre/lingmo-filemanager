@@ -6,6 +6,10 @@
         <file>qml/FolderListItem.qml</file>
         <file>qml/Dialogs/PropertiesDialog.qml</file>
         <file>qml/FolderListView.qml</file>
+        <file>qml/FolderColumnsView.qml</file>
+        <file>qml/FolderColumnList.qml</file>
+        <file>qml/FolderColumnItem.qml</file>
+        <file>qml/FolderColumnSeparator.qml</file>
         <file>qml/Controls/IconButton.qml</file>
         <file>qml/Controls/SymbolicIcon.qml</file>
         <file>qml/Controls/SegmentedControl.qml</file>

@@ -20,25 +20,17 @@
 #include "thumbnailprovider.h"
 #include "thumbnailcache.h"
 
-#include <QFile>
-#include <QImage>
-#include <QDebug>
-
+// id: the percent-encoded path (Thumbnails::imageUrlFor), as the models'
+// "thumbnail" role gives it. Runs on QQuickPixmapCache's loader thread (the
+// Images are asynchronous).
 QImage ThumbnailProvider::requestImage(const QString &id, QSize *size, const QSize &requestedSize)
 {
-    if (!requestedSize.isValid()) {
-        return QImage();
-    }
+    const QString path = Thumbnails::pathFromImageId(id);
+    const int wanted = std::max(requestedSize.width(), requestedSize.height());
 
+    // The flavor's size (128, 256, ...): the view scales it to the item
+    const QImage image = Thumbnails::load(path, wanted > 0 ? wanted : 128);
     if (size)
-        *size = requestedSize;
-
-    QString f = id;
-    QString thumbnail = ThumbnailCache::self()->requestThumbnail(id, requestedSize);
-
-    if (!thumbnail.isEmpty()) {
-        return QImage(thumbnail);
-    }
-
-    return QImage();
+        *size = image.size();
+    return image;
 }
