@@ -12,3 +12,4 @@ MimeType=inode/directory;
 Icon=lingmo-filemanager
 Categories=Qt;System;FileTools;FileManager;
 StartupNotify=true
+X-Lingmo-Intents=files.reveal;files.open;files.search;

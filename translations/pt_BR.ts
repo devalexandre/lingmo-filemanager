@@ -1115,4 +1115,19 @@
         <translation>Enviar para dispositivo próximo…</translation>
     </message>
 </context>
+<context>
+    <name>QObject</name>
+    <message>
+        <source>File not found: %1</source>
+        <translation>Arquivo não encontrado: %1</translation>
+    </message>
+    <message>
+        <source>Programs, scripts and app launchers are never opened by actions.</source>
+        <translation>Programas, scripts e atalhos de apps nunca são abertos por ações.</translation>
+    </message>
+    <message>
+        <source>Not a folder: %1</source>
+        <translation>Não é uma pasta: %1</translation>
+    </message>
+</context>
 </TS>

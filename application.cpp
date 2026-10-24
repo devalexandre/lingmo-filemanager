@@ -56,14 +56,23 @@ Application::Application(int& argc, char** argv)
     , m_instance(false)
 {
     QDBusConnection bus = QDBusConnection::sessionBus();
-    bool registered = bus.registerService("com.lingmo.FileManager");
-    if (registered) {
+
+    // The desktop process (wallpaper + icons) must never own the D-Bus service:
+    // file manager windows opened through D-Bus live in the owner's process, so a
+    // crash in any of them would take the whole desktop down (black screen).
+    const QStringList args = arguments();
+    const bool desktopMode = args.contains(QStringLiteral("--desktop")) || args.contains(QStringLiteral("-d"));
+
+    bool registered = !desktopMode && bus.registerService("com.lingmo.FileManager");
+    if (registered || desktopMode) {
         setOrganizationName("lingmoos");
         setWindowIcon(QIcon::fromTheme("file-manager"));
 
-        new FileManagerAdaptor(this);
-        new DBusInterface;
-        bus.registerObject("/FileManager", this);
+        if (registered) {
+            new FileManagerAdaptor(this);
+            new DBusInterface;
+            bus.registerObject("/FileManager", this);
+        }
 
         // Translations
         QLocale locale;

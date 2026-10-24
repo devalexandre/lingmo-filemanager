@@ -121,6 +121,18 @@ else()
   message(STATUS "PDF preview: disabled (poppler-qt6 not found)")
 endif()
 
+# Lingmo Intents: files.reveal / files.open / files.search on
+# com.lingmo.FileManager.Intents /Intents (intents/, hooked only in main.cpp)
+find_package(LingmoIntents 1.0 QUIET)
+if(LingmoIntents_FOUND)
+  target_sources(lingmo-filemanager PRIVATE intents/filesintents.cpp intents/filesintents.h)
+  target_compile_definitions(lingmo-filemanager PRIVATE HAVE_LINGMO_INTENTS)
+  target_link_libraries(lingmo-filemanager PRIVATE LingmoIntents::LingmoIntents)
+  lingmo_install_intents(MANIFEST intents/lingmo-filemanager.json SERVICE intents/com.lingmo.FileManager.Intents.service)
+else()
+  message(WARNING "LingmoIntents not found: the file manager is built without app actions (intents)")
+endif()
+
 if(KF6FileMetaData_FOUND)
   target_link_libraries(lingmo-filemanager PRIVATE KF6::FileMetaData)
   target_compile_definitions(lingmo-filemanager PRIVATE HAVE_KFILEMETADATA)

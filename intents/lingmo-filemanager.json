@@ -1,0 +1,238 @@
+{
+  "format": "lingmo-intents",
+  "version": 1,
+  "app": "lingmo-filemanager",
+  "name": {
+    "en": "Files",
+    "pt_BR": "Arquivos"
+  },
+  "icon": "file-system-manager",
+  "desktop": "lingmo-filemanager.desktop",
+  "dbus": {
+    "service": "com.lingmo.FileManager.Intents",
+    "path": "/Intents"
+  },
+  "intents": [
+    {
+      "id": "files.reveal",
+      "title": {
+        "en": "Show in folder",
+        "pt_BR": "Mostrar na pasta"
+      },
+      "description": {
+        "en": "Opens the folder that holds a file in the file manager.",
+        "pt_BR": "Abre no gerenciador de arquivos a pasta onde o arquivo está."
+      },
+      "summary": {
+        "en": "Show {path} in its folder",
+        "pt_BR": "Mostrar {path} na pasta"
+      },
+      "icon": "document-open-folder",
+      "capabilities": [
+        "read"
+      ],
+      "needsUI": true,
+      "assistantTool": "desktop_actions",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "format": "file",
+            "title": {
+              "en": "File or folder",
+              "pt_BR": "Arquivo ou pasta"
+            }
+          }
+        },
+        "required": [
+          "path"
+        ]
+      },
+      "result": {
+        "type": "object",
+        "properties": {
+          "folder": {
+            "type": "string",
+            "title": {
+              "en": "Folder",
+              "pt_BR": "Pasta"
+            }
+          }
+        }
+      },
+      "examples": {
+        "pt_BR": [
+          "mostrar {path} na pasta",
+          "abrir a pasta de {path}"
+        ],
+        "en": [
+          "show {path} in folder",
+          "reveal {path}"
+        ]
+      }
+    },
+    {
+      "id": "files.open",
+      "title": {
+        "en": "Open file",
+        "pt_BR": "Abrir arquivo"
+      },
+      "description": {
+        "en": "Opens a document, picture or folder with its default app (programs and launchers are never run).",
+        "pt_BR": "Abre um documento, imagem ou pasta no app padrão (programas e atalhos de apps nunca são executados)."
+      },
+      "summary": {
+        "en": "Open {path}",
+        "pt_BR": "Abrir {path}"
+      },
+      "icon": "document-open",
+      "capabilities": [
+        "read"
+      ],
+      "needsUI": true,
+      "assistantTool": "desktop_actions",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "format": "file",
+            "title": {
+              "en": "File",
+              "pt_BR": "Arquivo"
+            }
+          }
+        },
+        "required": [
+          "path"
+        ]
+      },
+      "result": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "title": {
+              "en": "File",
+              "pt_BR": "Arquivo"
+            }
+          },
+          "type": {
+            "type": "string",
+            "title": {
+              "en": "Type",
+              "pt_BR": "Tipo"
+            }
+          }
+        }
+      },
+      "examples": {
+        "pt_BR": [
+          "abrir arquivo {path}",
+          "abrir {path}"
+        ],
+        "en": [
+          "open file {path}",
+          "open {path}"
+        ]
+      }
+    },
+    {
+      "id": "files.search",
+      "title": {
+        "en": "Search files",
+        "pt_BR": "Procurar arquivos"
+      },
+      "description": {
+        "en": "Finds files by name inside a folder (hidden files and protected places are skipped).",
+        "pt_BR": "Encontra arquivos pelo nome dentro de uma pasta (arquivos ocultos e lugares protegidos ficam de fora)."
+      },
+      "summary": {
+        "en": "Search files named “{query}”",
+        "pt_BR": "Procurar arquivos com «{query}»"
+      },
+      "icon": "edit-find",
+      "capabilities": [
+        "read"
+      ],
+      "assistantTool": "search_files",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "title": {
+              "en": "Name contains",
+              "pt_BR": "Nome contém"
+            }
+          },
+          "folder": {
+            "type": "string",
+            "format": "folder",
+            "default": "~",
+            "title": {
+              "en": "In folder",
+              "pt_BR": "Na pasta"
+            }
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 500,
+            "default": 50,
+            "title": {
+              "en": "At most",
+              "pt_BR": "No máximo"
+            }
+          }
+        },
+        "required": [
+          "query"
+        ]
+      },
+      "result": {
+        "type": "object",
+        "properties": {
+          "files": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "title": {
+              "en": "Files",
+              "pt_BR": "Arquivos"
+            }
+          },
+          "count": {
+            "type": "integer",
+            "title": {
+              "en": "Found",
+              "pt_BR": "Encontrados"
+            }
+          },
+          "truncated": {
+            "type": "boolean",
+            "title": {
+              "en": "Partial",
+              "pt_BR": "Parcial"
+            }
+          }
+        }
+      },
+      "examples": {
+        "pt_BR": [
+          "procurar arquivo {query}",
+          "buscar arquivos {query}",
+          "encontrar {query}"
+        ],
+        "en": [
+          "find file {query}",
+          "search files {query}"
+        ]
+      }
+    }
+  ]
+}

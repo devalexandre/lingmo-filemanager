@@ -32,6 +32,11 @@ void Window::load(const QUrl &url)
 {
     QQmlApplicationEngine::load(url);
 
+    if (rootObjects().isEmpty()) {
+        deleteLater();
+        return;
+    }
+
     QQuickWindow *w = qobject_cast<QQuickWindow *>(rootObjects().first());
 
     if (w)

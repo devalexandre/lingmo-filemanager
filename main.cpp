@@ -39,8 +39,18 @@
 
 #include <QMimeData>
 
+#ifdef HAVE_LINGMO_INTENTS
+#include "intents/filesintents.h"
+#endif
+
 int main(int argc, char *argv[])
 {
+#ifdef HAVE_LINGMO_INTENTS
+    // Lingmo Intents (files.reveal/open/search): a small process without windows
+    if (FilesIntents::requested(argc, argv))
+        return FilesIntents::run(argc, argv);
+#endif
+
     QCoreApplication::setAttribute(Qt::AA_UseHighDpiPixmaps, true);
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling, true);
 
