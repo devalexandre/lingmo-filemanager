@@ -1057,4 +1057,62 @@
         <translation>Colunas (Ctrl+3)</translation>
     </message>
 </context>
+<context>
+    <name>IslandJobTracker</name>
+    <message>
+        <source>Moving files</source>
+        <translation>Movendo arquivos</translation>
+    </message>
+    <message>
+        <source>Copying files</source>
+        <translation>Copiando arquivos</translation>
+    </message>
+    <message>
+        <source>Moving %1 of %2 items</source>
+        <translation>Movendo %1 de %2 itens</translation>
+    </message>
+    <message>
+        <source>Copying %1 of %2 items</source>
+        <translation>Copiando %1 de %2 itens</translation>
+    </message>
+    <message>
+        <source>Moving 1 item</source>
+        <translation>Movendo 1 item</translation>
+    </message>
+    <message>
+        <source>Copying 1 item</source>
+        <translation>Copiando 1 item</translation>
+    </message>
+    <message>
+        <source>%1 of %2</source>
+        <translation>%1 de %2</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>Cancelar</translation>
+    </message>
+    <message>
+        <source>Move failed</source>
+        <translation>Falha ao mover</translation>
+    </message>
+    <message>
+        <source>Copy failed</source>
+        <translation>Falha na cópia</translation>
+    </message>
+    <message>
+        <source>Move complete</source>
+        <translation>Movimentação concluída</translation>
+    </message>
+    <message>
+        <source>Copy complete</source>
+        <translation>Cópia concluída</translation>
+    </message>
+</context>
+<context>
+    <name>NearbyShare</name>
+    <message>
+        <source>Send to Nearby Device…</source>
+        <translation>Enviar para dispositivo próximo…</translation>
+    </message>
+</context>
 </TS>

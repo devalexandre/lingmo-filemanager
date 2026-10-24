@@ -72,6 +72,8 @@
 #include <KIO/PreviewJob>
 #include <KIO/DeleteJob>
 #include <KIO/DropJob>
+#include "../helper/islandjobtracker.h"
+#include "../helper/nearbyshare.h"
 #include <KIO/FileUndoManager>
 #include <KIO/JobUiDelegate>
 #include <KIO/Paste>
@@ -1014,6 +1016,8 @@ void FolderModel::paste()
 
         KIO::Job *job = KIO::paste(data, m_dirModel->dirLister()->url());
         // connect(job, &KIO::Job::finished, this, &FolderModel::delayUpdateNeedSelectUrls);
+        IslandJobTracker::track(job, mimeData->hasFormat("application/x-lingmo-cutselection")
+                                         ? IslandJobTracker::Move : IslandJobTracker::Copy);
         job->start();
 
         // Clear system clipboard.
@@ -1352,6 +1356,7 @@ void FolderModel::drop(QQuickItem *target, QObject *dropEvent, int row)
 
     if (!isDropBetweenSharedViews(urls, dropTargetFolderUrl)) {
         KIO::Job *job = KIO::move(urls, dropTargetUrl, KIO::HideProgressInfo);
+        IslandJobTracker::track(job, IslandJobTracker::Move);
         job->start();
 
         // Add select
@@ -1482,6 +1487,7 @@ void FolderModel::openContextMenu(QQuickItem *visualParent, Qt::KeyboardModifier
         menu->addAction(m_actionCollection.action("extractHere"));
         menu->addAction(m_actionCollection.action("extractTo"));
         menu->addAction(m_actionCollection.action("compress"));
+        menu->addAction(m_actionCollection.action("sendNearby"));
         menu->addSeparator();
         menu->addAction(m_actionCollection.action("cut"));
         menu->addAction(m_actionCollection.action("copy"));
@@ -2058,6 +2064,10 @@ void FolderModel::createActions()
     m_actionCollection.addAction(QStringLiteral("openInNewWindow"), openInNewWindow);
     m_actionCollection.addAction(QStringLiteral("openInNewTab"), openInNewTab);
     m_actionCollection.addAction(QStringLiteral("favorite"), favorite);
+    // Lingmo Share: send the selected files to a phone or nearby computer
+    QAction *sendNearby = NearbyShare::createAction(this);
+    connect(sendNearby, &QAction::triggered, this, [this] { NearbyShare::send(selectedUrls()); });
+    m_actionCollection.addAction(QStringLiteral("sendNearby"), sendNearby);
 }
 
 void FolderModel::updateActions()
@@ -2098,6 +2108,8 @@ void FolderModel::updateActions()
     }
     if (auto *action = m_actionCollection.action("compress"))
         action->setVisible(localSelection);
+    if (auto *action = m_actionCollection.action("sendNearby"))
+        action->setVisible(localSelection && NearbyShare::available());
 
     KFileItemListProperties itemProperties(items);
     // Check if we're showing the menu for the trash link

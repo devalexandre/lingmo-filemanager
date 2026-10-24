@@ -70,6 +70,7 @@ add_executable(lingmo-filemanager
   desktop/dockdbusinterface.cpp
 
   helper/archivemanager.cpp
+  helper/nearbyshare.cpp
   helper/datehelper.cpp
   helper/pathhistory.cpp
   helper/fm.cpp
@@ -77,6 +78,7 @@ add_executable(lingmo-filemanager
   helper/filelauncher.cpp
   helper/keyboardsearchmanager.cpp
   helper/placeshelper.cpp
+  helper/islandjobtracker.cpp
 
   mimetype/mimeappmanager.cpp
   mimetype/xdgdesktopfile.cpp
