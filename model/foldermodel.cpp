@@ -54,6 +54,9 @@
 #include <QMimeData>
 #include <QClipboard>
 #include <QPainter>
+#include <QGuiApplication>
+#include <QFontMetrics>
+#include <QIcon>
 #include <QDrag>
 #include <QActionGroup>
 #include <QDir>
@@ -2227,10 +2230,61 @@ void FolderModel::updateActions()
     }
 }
 
+// Drag image for views that don't register item snapshots (the file manager's grid, list
+// and column views): the selected items' icons, stacked, with a count for several items
+static QPixmap stackedIconsPixmap(const QList<KFileItem> &items, qreal dpr)
+{
+    const int icon = 64, step = 8, shown = qMin<int>(items.size(), 3);
+    const int side = icon + step * (shown - 1);
+    QPixmap pixmap(QSize(side + 12, side + 12) * dpr);
+    pixmap.setDevicePixelRatio(dpr);
+    pixmap.fill(Qt::transparent);
+    QPainter painter(&pixmap);
+    painter.setRenderHint(QPainter::Antialiasing);
+    for (int i = shown - 1; i >= 0; --i) {
+        const QIcon themed = QIcon::fromTheme(items.at(i).iconName(), QIcon::fromTheme(QStringLiteral("text-x-generic")));
+        painter.setOpacity(i == 0 ? 0.92 : 0.6);
+        themed.paint(&painter, QRect(step * i, step * i, icon, icon));
+    }
+    if (items.size() > 1) {
+        painter.setOpacity(1.0);
+        const QString count = QString::number(items.size());
+        QFont font = painter.font();
+        font.setBold(true);
+        font.setPixelSize(12);
+        painter.setFont(font);
+        const int w = qMax(22, QFontMetrics(font).horizontalAdvance(count) + 12);
+        const QRect badge(side + 12 - w, 0, w, 22);
+        painter.setPen(Qt::NoPen);
+        painter.setBrush(QColor(0x27, 0x79, 0xFF));
+        painter.drawRoundedRect(badge, 11, 11);
+        painter.setPen(Qt::white);
+        painter.drawText(badge, Qt::AlignCenter, count);
+    }
+    return pixmap;
+}
+
 void FolderModel::addDragImage(QDrag *drag, int x, int y)
 {
-    if (!drag || m_dragImages.isEmpty())
+    if (!drag)
         return;
+
+    bool haveSnapshots = false;
+    for (DragImage *image : std::as_const(m_dragImages))
+        haveSnapshots |= !image->image.isNull();
+    if (!haveSnapshots) {
+        QList<KFileItem> items;
+        const QModelIndexList selected = m_selectionModel->selectedIndexes();
+        for (const QModelIndex &index : selected)
+            items.append(itemForIndex(index));
+        if (items.isEmpty())
+            return;
+        const qreal dpr = qApp->devicePixelRatio();
+        const QPixmap pixmap = stackedIconsPixmap(items, dpr);
+        drag->setPixmap(pixmap);
+        drag->setHotSpot(QPoint(32, 32));
+        return;
+    }
 
     QRegion region;
 
