@@ -77,6 +77,7 @@
 #include <KIO/DropJob>
 #include "../helper/islandjobtracker.h"
 #include "../helper/nearbyshare.h"
+#include "../helper/fileactions.h"
 #include <KIO/FileUndoManager>
 #include <KIO/JobUiDelegate>
 #include <KIO/Paste>
@@ -96,6 +97,21 @@ static bool isDropBetweenSharedViews(const QList<QUrl> &urls, const QUrl &folder
         }
     }
     return true;
+}
+
+// The view whose selection changed last: File actions asks for its files (D-Bus selectedFiles)
+static QPointer<FolderModel> s_lastSelection;
+
+QStringList FolderModel::lastSelectedPaths()
+{
+    QStringList paths;
+    if (!s_lastSelection)
+        return paths;
+    for (const QUrl &url : s_lastSelection->selectedUrls()) {
+        if (url.isLocalFile())
+            paths << url.toLocalFile();
+    }
+    return paths;
 }
 
 FolderModel::FolderModel(QObject *parent)
@@ -186,6 +202,10 @@ FolderModel::FolderModel(QObject *parent)
 
     m_selectionModel = new QItemSelectionModel(this, this);
     connect(m_selectionModel, &QItemSelectionModel::selectionChanged, this, &FolderModel::selectionChanged);
+    connect(m_selectionModel, &QItemSelectionModel::selectionChanged, this, [this] {
+        if (m_selectionModel->hasSelection())
+            s_lastSelection = this;
+    });
 
     setSourceModel(m_dirModel);
     setSortLocaleAware(true);
@@ -1491,6 +1511,8 @@ void FolderModel::openContextMenu(QQuickItem *visualParent, Qt::KeyboardModifier
         menu->addAction(m_actionCollection.action("extractTo"));
         menu->addAction(m_actionCollection.action("compress"));
         menu->addAction(m_actionCollection.action("sendNearby"));
+        menu->addAction(m_actionCollection.action("convertFiles"));
+        menu->addAction(m_actionCollection.action("fileActions"));
         menu->addSeparator();
         menu->addAction(m_actionCollection.action("cut"));
         menu->addAction(m_actionCollection.action("copy"));
@@ -2071,6 +2093,13 @@ void FolderModel::createActions()
     QAction *sendNearby = NearbyShare::createAction(this);
     connect(sendNearby, &QAction::triggered, this, [this] { NearbyShare::send(selectedUrls()); });
     m_actionCollection.addAction(QStringLiteral("sendNearby"), sendNearby);
+    // File actions (lingmo-fileaction): the conversion wheel for the selected files
+    QAction *convertFiles = FileActions::createAction(QStringLiteral("convert"), this);
+    connect(convertFiles, &QAction::triggered, this, [this] { FileActions::open(QStringLiteral("convert"), selectedUrls()); });
+    m_actionCollection.addAction(QStringLiteral("convertFiles"), convertFiles);
+    QAction *fileActions = FileActions::createAction(QStringLiteral("tools"), this);
+    connect(fileActions, &QAction::triggered, this, [this] { FileActions::open(QStringLiteral("tools"), selectedUrls()); });
+    m_actionCollection.addAction(QStringLiteral("fileActions"), fileActions);
 }
 
 void FolderModel::updateActions()
@@ -2113,6 +2142,10 @@ void FolderModel::updateActions()
         action->setVisible(localSelection);
     if (auto *action = m_actionCollection.action("sendNearby"))
         action->setVisible(localSelection && NearbyShare::available());
+    for (const auto &name : {"convertFiles", "fileActions"}) {
+        if (auto *action = m_actionCollection.action(name))
+            action->setVisible(localSelection && FileActions::available());
+    }
 
     KFileItemListProperties itemProperties(items);
     // Check if we're showing the menu for the trash link

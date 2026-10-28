@@ -71,6 +71,7 @@ add_executable(lingmo-filemanager
 
   helper/archivemanager.cpp
   helper/nearbyshare.cpp
+  helper/fileactions.cpp
   helper/datehelper.cpp
   helper/pathhistory.cpp
   helper/fm.cpp

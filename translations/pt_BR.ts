@@ -1109,6 +1109,17 @@
     </message>
 </context>
 <context>
+    <name>FileActions</name>
+    <message>
+        <source>Convert…</source>
+        <translation>Converter…</translation>
+    </message>
+    <message>
+        <source>File Actions…</source>
+        <translation>Ações de arquivo…</translation>
+    </message>
+</context>
+<context>
     <name>NearbyShare</name>
     <message>
         <source>Send to Nearby Device…</source>

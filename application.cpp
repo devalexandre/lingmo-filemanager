@@ -19,6 +19,7 @@
 
 #include "application.h"
 #include "dbusinterface.h"
+#include "model/foldermodel.h"
 #include "window.h"
 #include "desktop/desktop.h"
 #include "thumbnailer/thumbnailprovider.h"
@@ -114,6 +115,11 @@ void Application::openFiles(const QStringList &paths)
     for (const QString &path : paths) {
         openWindow(path);
     }
+}
+
+QStringList Application::selectedFiles() const
+{
+    return FolderModel::lastSelectedPaths();
 }
 
 void Application::moveToTrash(const QStringList &paths)

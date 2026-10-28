@@ -35,6 +35,7 @@ public:
     void openFiles(const QStringList &paths);
     void moveToTrash(const QStringList &paths);
     void emptyTrash();
+    QStringList selectedFiles() const;
 
 private:
     void openWindow(const QString &path);

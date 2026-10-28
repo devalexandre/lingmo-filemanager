@@ -8,5 +8,9 @@
       <arg type="as" direction="in"/>
     </method>
     <method name="emptyTrash"></method>
+    <!-- the files selected in the window used last (File actions, Meta+Shift+A) -->
+    <method name="selectedFiles">
+      <arg type="as" direction="out"/>
+    </method>
   </interface>
 </node>

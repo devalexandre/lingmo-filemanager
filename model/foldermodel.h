@@ -185,6 +185,8 @@ public:
     Q_INVOKABLE int fileExtensionBoundary(int row);
 
     Q_INVOKABLE bool hasSelection() const;
+    // Local paths selected in the folder view whose selection changed last (D-Bus selectedFiles)
+    static QStringList lastSelectedPaths();
     Q_INVOKABLE bool isSelected(int row) const;
     Q_INVOKABLE bool isBlank(int row) const;
     Q_INVOKABLE void setSelected(int row);
